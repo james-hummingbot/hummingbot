@@ -4,12 +4,20 @@
 // https://api.tzkt.io/#operation/Tokens_GetTokenBalances
 
 import axios from 'axios';
+import { promises as fs } from 'fs';
 import { BigNumber } from 'ethers';
 import { getTezosConfig } from './tezos.config';
 import { logger } from '../../services/logger';
-import { IncomingMessage, IncomingHttpHeaders } from 'http';
-import https, { RequestOptions } from 'https';
-import { TokenValue } from '../../services/base';
+import { TokenListType, TokenValue } from '../../services/base';
+
+export interface TokenInfo {
+  name: string;
+  symbol: string;
+  address: string;
+  decimals: number;
+  standard: string;
+  tokenId: number;
+}
 
 export interface Account {
   address: string;
@@ -35,12 +43,6 @@ export interface TokenResponse {
   account: Account;
   token: Token;
   balance: string; // BigNumber?
-}
-
-export interface Response {
-  statusCode: number;
-  headers: IncomingHttpHeaders;
-  body: any;
 }
 
 export interface TransactionResponse {
@@ -72,65 +74,37 @@ export interface BlockHead {
   level: number;
 }
 
-// approve
-// getTokenBySymbol
-// getCurrentBLockNumber
-// cancel
-
-// function request(options: RequestOptions | string | URL, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
-
-//  type RequestOptions = http.RequestOptions & tls.SecureContextOptions & {
-//        rejectUnauthorized?: boolean; // Defaults to true
-//        servername?: string; // SNI TLS Extension
-//    };
-
-// function request(options: RequestOptions | string | URL, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
-//    function request(url: string | URL, options: RequestOptions, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
-
-export const requestPromise = (
-  options: RequestOptions,
-  data?: any
-): Promise<Response> => {
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, (res: IncomingMessage) => {
-      let body = '';
-      res.on('data', (chunk) => (body += chunk.toString()));
-      res.on('error', reject);
-      res.on('end', () => {
-        if (
-          res.statusCode != null &&
-          res.statusCode >= 200 &&
-          res.statusCode <= 299
-        ) {
-          resolve({
-            statusCode: res.statusCode,
-            headers: res.headers,
-            body: JSON.parse(body),
-          });
-        } else {
-          reject(
-            'Request failed. status: ' + res.statusCode + ', body: ' + body
-          );
-        }
-      });
-    });
-    req.on('error', reject);
-    req.write(data, 'binary');
-    req.end();
-  });
-};
-
 export class Tezos {
   private static _instances: { [name: string]: Tezos };
   public chainId: string;
+
+  protected tokenList: TokenInfo[] = [];
+  private _tokenMap: Record<string, TokenInfo> = {};
+
+  public tokenListSource: string;
+  public tokenListType: TokenListType;
+
+  public nodeURL: string;
   public tzktURL: string;
-  public nativeTokenSymbol: string;
+  public nativeCurrencySymbol: string;
+
+  private _ready: boolean = false;
+  private _initializing: boolean = false;
+  private _initPromise: Promise<void> = Promise.resolve();
 
   private constructor(network: string) {
     const config = getTezosConfig('tezos', network);
     this.chainId = config.network.chainId;
+    //   this._gasPrice = config.manualGasPrice;
+    // this._gasPriceRefreshInterval =
+    //   config.network.gasPriceRefreshInterval !== undefined
+    //     ? config.network.gasPriceRefreshInterval
+    //     : null;
+    (this.tokenListSource = config.network.tokenListSource),
+      (this.tokenListType = config.network.tokenListType),
+      (this.nativeCurrencySymbol = config.nativeCurrencySymbol);
+    this.nodeURL = config.network.nodeURL;
     this.tzktURL = config.network.tzktURL;
-    this.nativeTokenSymbol = config.network.nativeTokenSymbol;
   }
 
   public static getInstance(network: string): Tezos {
@@ -149,6 +123,52 @@ export class Tezos {
     return Tezos._instances;
   }
 
+  ready(): boolean {
+    return this._ready;
+  }
+
+  async init(): Promise<void> {
+    if (!this.ready() && !this._initializing) {
+      this._initializing = true;
+      this._initPromise = this.loadTokens(
+        this.tokenListSource,
+        this.tokenListType
+      ).then(() => {
+        this._ready = true;
+        this._initializing = false;
+      });
+    }
+    return this._initPromise;
+  }
+
+  async loadTokens(
+    tokenListSource: string,
+    tokenListType: TokenListType
+  ): Promise<void> {
+    this.tokenList = await this.getTokenList(tokenListSource, tokenListType);
+    if (this.tokenList) {
+      this.tokenList.forEach(
+        (token: TokenInfo) => (this._tokenMap[token.symbol] = token)
+      );
+    }
+  }
+
+  // returns a Tokens for a given list source and list type
+  async getTokenList(
+    tokenListSource: string,
+    tokenListType: TokenListType
+  ): Promise<TokenInfo[]> {
+    let tokens;
+    if (tokenListType === 'URL') {
+      ({
+        data: { tokens },
+      } = await axios.get(tokenListSource));
+    } else {
+      ({ tokens } = JSON.parse(await fs.readFile(tokenListSource, 'utf8')));
+    }
+    return tokens;
+  }
+
   // supports FA1.2 and FA2
   async getTokenBalance(
     contractAddress: string,
@@ -156,13 +176,6 @@ export class Tezos {
     tokenId: number,
     decimals: number
   ): Promise<TokenValue> {
-    // const response = await requestPromise({
-    //   method: 'GET',
-    //   host: 'api.tzkt.io',
-    //   port: 443,
-    //   path: `/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`,
-    // });
-    //   const tokens: Array<TokenResponse> = response.body;
     const tokens: Array<TokenResponse> = await axios.get(
       `https://api.tzkt.io/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`
     );
@@ -171,7 +184,7 @@ export class Tezos {
       value = BigNumber.from(tokens[0].balance);
     }
 
-    return { value, decimals }; // : parseInt(tokens[0].token.metadata.decimals)}
+    return { value, decimals };
   }
 
   async getTokenAllowance(

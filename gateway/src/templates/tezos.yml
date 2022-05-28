@@ -1,0 +1,12 @@
+# list the Avalanche networks available to gateway
+networks:
+  mainnet: 
+    chainID: 'mainnet'
+    nativeCurrencySymbol: 'XTZ'    
+    nodeURL: 'https://mainnet.smartpy.io'
+    tokenListType: 'FILE'
+    tokenListSource: 'src/chains/tezos/tezos.mainnet.tokens.json'
+    tzktURL: 'https://api.tzkt.io'
+
+manualGasPrice: 100
+gasLimit: 3000000

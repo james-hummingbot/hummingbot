@@ -40,6 +40,10 @@ configurations:
     configurationPath: telemetry.yml
     schemaPath: telemetry-schema.json
 
+  $namespace tezos:
+    configurationPath: tezos.yml
+    schemaPath: tezos-schema.json
+    
   $namespace uniswap:
     configurationPath: uniswap.yml
     schemaPath: uniswap-schema.json
