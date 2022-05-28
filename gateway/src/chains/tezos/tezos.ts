@@ -3,6 +3,7 @@
 
 // https://api.tzkt.io/#operation/Tokens_GetTokenBalances
 
+import axios from 'axios';
 import { BigNumber } from 'ethers';
 import { getTezosConfig } from './tezos.config';
 import { logger } from '../../services/logger';
@@ -65,6 +66,17 @@ export interface TransactionResponse {
   hasInternals: boolean;
 }
 
+export interface BlockHead {
+  chain?: string;
+  chainId?: string;
+  level: number;
+}
+
+// approve
+// getTokenBySymbol
+// getCurrentBLockNumber
+// cancel
+
 // function request(options: RequestOptions | string | URL, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
 
 //  type RequestOptions = http.RequestOptions & tls.SecureContextOptions & {
@@ -110,11 +122,15 @@ export const requestPromise = (
 
 export class Tezos {
   private static _instances: { [name: string]: Tezos };
-  public chainId: number;
+  public chainId: string;
+  public tzktURL: string;
+  public nativeTokenSymbol: string;
 
   private constructor(network: string) {
     const config = getTezosConfig('tezos', network);
     this.chainId = config.network.chainId;
+    this.tzktURL = config.network.tzktURL;
+    this.nativeTokenSymbol = config.network.nativeTokenSymbol;
   }
 
   public static getInstance(network: string): Tezos {
@@ -129,6 +145,10 @@ export class Tezos {
     return Tezos._instances[network];
   }
 
+  public static getConnectedInstances(): { [name: string]: Tezos } {
+    return Tezos._instances;
+  }
+
   // supports FA1.2 and FA2
   async getTokenBalance(
     contractAddress: string,
@@ -136,22 +156,29 @@ export class Tezos {
     tokenId: number,
     decimals: number
   ): Promise<TokenValue> {
-    const response = await requestPromise({
-      method: 'GET',
-      host: 'api.tzkt.io',
-      port: 443,
-      path: `/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`,
-    });
-    const tokens: Array<TokenResponse> = response.body;
+    // const response = await requestPromise({
+    //   method: 'GET',
+    //   host: 'api.tzkt.io',
+    //   port: 443,
+    //   path: `/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`,
+    // });
+    //   const tokens: Array<TokenResponse> = response.body;
+    const tokens: Array<TokenResponse> = await axios.get(
+      `https://api.tzkt.io/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`
+    );
+    let value = BigNumber.from(0);
+    if (tokens.length > 0) {
+      value = BigNumber.from(tokens[0].balance);
+    }
 
-    return { value: BigNumber.from(tokens[0].balance), decimals }; // : parseInt(tokens[0].token.metadata.decimals)}
+    return { value, decimals }; // : parseInt(tokens[0].token.metadata.decimals)}
   }
 
   async getTokenAllowance(
-    contractAddress: string,
+    _contractAddress: string,
     walletAddress: string,
     spender: string,
-    tokenId: number,
+    _tokenId: number,
     decimals: number
   ): Promise<TokenValue> {
     logger.info(
@@ -167,8 +194,18 @@ export class Tezos {
   }
 
   // https://api.tzkt.io/v1/operations/transactions/{hash}
-  async getTransaction(txHash: string): Promise<providers.TransactionResponse> {
-    return this._provider.getTransaction(txHash);
+  async getTransaction(txHash: string): Promise<TransactionResponse> {
+    return axios.get(
+      `https://api.tzkt.io/v1/operations/transactions/${txHash}`
+    );
+  }
+
+  // https://api.tzkt.io/v1/head
+  // https://mainnet.smartpy.io/chains/main/blocks/head/header
+  // get the current block number
+  async getCurrentBlockNumber(): Promise<number> {
+    const block: BlockHead = await axios.get(`https://api.tzkt.io/v1/head`);
+    return block.level;
   }
 
   // async getFA2Balance(
@@ -183,6 +220,25 @@ export class Tezos {
   //       `${wallet.address}: ${balance.toString()}`
   //   );
   //   return { value: balance, decimals: decimals };
+  // }
+
+  // async loadTokens(
+  //   tokenListSource: string,
+  //   tokenListType: TokenListType
+  // ): Promise<void> {
+  //   this.tokenList = await this.getTokenList(tokenListSource, tokenListType);
+  //   if (this.tokenList) {
+  //     this.tokenList.forEach(
+  //       (token: TokenInfo) => (this._tokenMap[token.symbol] = token)
+  //     );
+  //   }
+  // }
+
+  // public getTokenBySymbol(tokenSymbol: string): TokenInfo | undefined {
+  //   return this.tokenList.find(
+  //     (token: TokenInfo) =>
+  //       token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+  //   );
   // }
 }
 

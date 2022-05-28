@@ -5,6 +5,7 @@
       "symbol": "kUSD",
       "address": "KT1K9gCRgaLRFKTErYt1wVxA3Frb9FjasjTV",
       "decimals": 18,
+      "standard": "fa1.2",
       "tokenId": 0
     },
     {
@@ -12,6 +13,7 @@
       "symbol": "wXTZ",
       "address": "KT1VYsVfmobT7rsMVivvZ4J8i3bPiqz12NaH",
       "decimals": 6,
+      "standard": "fa1.2",
       "tokenId": 0
     },
     {
@@ -19,6 +21,7 @@
       "symbol": "tzBTC",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
       "decimals": 8,
+      "standard": "fa1.2",
       "tokenId": 0
     },
     {
@@ -26,6 +29,7 @@
       "symbol": "STKR",
       "address": "KT1AEfeckNbdEYwaMKkytBwPJPycz7jdSGea",
       "decimals": 18,
+      "standard": "fa1.2",
       "tokenId": 0
     },
     {
@@ -33,6 +37,7 @@
       "symbol": "USDtz",
       "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
       "decimals": 6,
+      "standard": "fa1.2",
       "tokenId": 0
     },
     {
@@ -40,6 +45,7 @@
       "symbol": "ETHtz",
       "address": "KT19at7rQUvyjxnZ2fBv7D9zc8rkyG7gAoU8",
       "decimals": 18,
+      "standard": "fa1.2",
       "tokenId": 0
     },
     {
@@ -47,6 +53,7 @@
       "symbol": "USDS",
       "address": "KT1REEb5VxWRjcHm5GzDMwErMmNFftsE5Gpf",
       "decimals": 6,
+      "standard": "fa2",
       "tokenId": 0
     },
     {
@@ -54,6 +61,7 @@
       "symbol": "hDAO",
       "address": "KT1AFA2mwNUMNd4SsujE1YYp29vd8BZejyKW",
       "decimals": 0,
+      "standard": "fa2",
       "tokenId": 0
     },
     {
@@ -61,6 +69,7 @@
       "symbol": "WRAP",
       "address": "KT1AFA2mwNUMNd4SsujE1YYp29vd8BZejyKW",
       "decimals": 0,
+      "standard": "fa2",
       "tokenId": 0
     },
     {
@@ -68,6 +77,7 @@
       "symbol": "sDAO",
       "address": "KT19ovJhcsUn4YU8Q5L3BGovKSixfbWcecEA",
       "decimals": 0,
+      "standard": "fa2",
       "tokenId": 1
     },
     {
@@ -75,6 +85,7 @@
       "symbol": "RSAL",
       "address": "",
       "decimals": 0,
+      "standard": "fa2",
       "tokenId": 0
     },
     {
@@ -82,6 +93,7 @@
       "symbol": "CRUNCH",
       "address": "KT1RRgK6eXvCWCiEGWhRZCSVGzhDzwXEEjS4",
       "decimals": 8,
+      "standard": "fa2",
       "tokenId": 0
     },
     {
@@ -89,6 +101,7 @@
       "symbol": "Ctez",
       "address": "KT1FbYwEWU8BTfrvNoL5xDEC5owsDxv9nqKT",
       "decimals": 6,
+      "standard": "fa1.2",
       "tokenId": 0
     }
   ]

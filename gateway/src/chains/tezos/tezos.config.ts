@@ -2,8 +2,9 @@ import { ConfigManagerV2 } from '../../services/config-manager-v2';
 
 export interface NetworkConfig {
   name: string;
-  chainId: number;
-  nodeURL: string;
+  chainId: string;
+  tzktURL: string;
+  nativeTokenSymbol: string;
 }
 
 export interface Config {
@@ -18,8 +19,11 @@ export function getTezosConfig(chainName: string, networkName: string): Config {
       chainId: ConfigManagerV2.getInstance().get(
         chainName + '.networks.' + network + '.chainId'
       ),
-      nodeURL: ConfigManagerV2.getInstance().get(
-        chainName + '.networks.' + network + '.nodeURL'
+      tzktURL: ConfigManagerV2.getInstance().get(
+        chainName + '.networks.' + network + '.tzktURL'
+      ),
+      nativeTokenSymbol: ConfigManagerV2.getInstance().get(
+        chainName + '.networks.' + network + '.nativeTokenSymbol'
       ),
     },
   };

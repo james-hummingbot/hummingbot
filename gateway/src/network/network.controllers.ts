@@ -7,6 +7,7 @@ import {
 import { Avalanche } from '../chains/avalanche/avalanche';
 import { Ethereum } from '../chains/ethereum/ethereum';
 import { Harmony } from '../chains/harmony/harmony';
+import { Tezos } from '../chains/tezos/tezos';
 import { TokenInfo } from '../services/ethereum-base';
 import {
   HttpException,
@@ -33,6 +34,8 @@ export async function getStatus(
       connections.push(Harmony.getInstance(req.network as string));
     } else if (req.chain === 'ethereum') {
       connections.push(Ethereum.getInstance(req.network as string));
+    } else if (req.chain === 'tezos') {
+      connections.push(Tezos.getInstance(req.network as string));
     } else {
       throw new HttpException(
         500,
@@ -52,6 +55,10 @@ export async function getStatus(
     const ethereumConnections = Ethereum.getConnectedInstances();
     connections = connections.concat(
       ethereumConnections ? Object.values(ethereumConnections) : []
+    );
+    const tezosConnections = Tezos.getConnectedInstances();
+    connections = connections.concat(
+      tezosConnections ? Object.values(tezosConnections) : []
     );
   }
 
