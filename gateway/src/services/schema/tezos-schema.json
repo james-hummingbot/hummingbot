@@ -8,21 +8,21 @@
         "^\\w+$": {
           "type": "object",
           "properties": {
-            "chainID": { "type": "integer" },
+            "chainID": { "type": "string" },
+            "gasPriceRefreshInterval": { "type": "number" },
+            "nativeCurrencySymbol": { "type": "string" },
             "nodeURL": { "type": "string" },
             "tokenListType": { "type": "string" },
             "tokenListSource": { "type": "string" },
-            "tzktURL": { "type": "string" },
-            "nativeCurrencySymbol": { "type": "string" },
-            "gasPriceRefreshInterval": { "type": "number" }
+            "tzktURL": { "type": "string" }
           },
           "required": [
             "chainID",
+            "nativeCurrencySymbol",
             "nodeURL",
             "tokenListType",
             "tokenListSource",
-            "tzktURL",
-            "nativeCurrencySymbol"
+            "tzktURL"
           ],
           "additionalProperties": false
         }

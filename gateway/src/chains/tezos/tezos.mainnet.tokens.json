@@ -2,7 +2,7 @@
   "tokens": [
     {
       "name": "Kolibri USD",
-      "symbol": "kUSD",
+      "symbol": "KUSD",
       "address": "KT1K9gCRgaLRFKTErYt1wVxA3Frb9FjasjTV",
       "decimals": 18,
       "standard": "fa1.2",
@@ -10,7 +10,7 @@
     },
     {
       "name": "wXTZ",
-      "symbol": "wXTZ",
+      "symbol": "WXTZ",
       "address": "KT1VYsVfmobT7rsMVivvZ4J8i3bPiqz12NaH",
       "decimals": 6,
       "standard": "fa1.2",
@@ -18,7 +18,7 @@
     },
     {
       "name": "tzBTC",
-      "symbol": "tzBTC",
+      "symbol": "TZBTC",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
       "decimals": 8,
       "standard": "fa1.2",
@@ -34,7 +34,7 @@
     },
     {
       "name": "USDtez",
-      "symbol": "USDtz",
+      "symbol": "USDTZ",
       "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
       "decimals": 6,
       "standard": "fa1.2",
@@ -42,7 +42,7 @@
     },
     {
       "name": "ETHtez",
-      "symbol": "ETHtz",
+      "symbol": "ETHTZ",
       "address": "KT19at7rQUvyjxnZ2fBv7D9zc8rkyG7gAoU8",
       "decimals": 18,
       "standard": "fa1.2",
@@ -58,7 +58,7 @@
     },
     {
       "name": "hDAO",
-      "symbol": "hDAO",
+      "symbol": "HDAO",
       "address": "KT1AFA2mwNUMNd4SsujE1YYp29vd8BZejyKW",
       "decimals": 0,
       "standard": "fa2",
@@ -74,7 +74,7 @@
     },
     {
       "name": "sDAO",
-      "symbol": "sDAO",
+      "symbol": "SDAO",
       "address": "KT19ovJhcsUn4YU8Q5L3BGovKSixfbWcecEA",
       "decimals": 0,
       "standard": "fa2",
@@ -83,7 +83,7 @@
     {
       "name": "RSAL",
       "symbol": "RSAL",
-      "address": "",
+      "address": "KT19ovJhcsUn4YU8Q5L3BGovKSixfbWcecEA",
       "decimals": 0,
       "standard": "fa2",
       "tokenId": 0
@@ -98,7 +98,7 @@
     },
     {
       "name": "Ctez",
-      "symbol": "Ctez",
+      "symbol": "CTEZ",
       "address": "KT1FbYwEWU8BTfrvNoL5xDEC5owsDxv9nqKT",
       "decimals": 6,
       "standard": "fa1.2",

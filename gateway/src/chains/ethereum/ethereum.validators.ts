@@ -101,7 +101,7 @@ export const validateAllowancesRequest: RequestValidator = mkRequestValidator([
 ]);
 
 export const validateBalanceRequest: RequestValidator = mkRequestValidator([
-  validateAddress,
+  // validateAddress,
   validateTokenSymbols,
 ]);
 

@@ -11,24 +11,39 @@ import {
   estimateGas as uniswapEstimateGas,
 } from '../connectors/uniswap/uniswap.controllers';
 import { getChain, getConnector } from '../services/connection-manager';
-import { NetworkSelectionRequest } from '../services/common-interfaces';
+import {
+  Ethereumish,
+  NetworkSelectionRequest,
+} from '../services/common-interfaces';
 
 export async function price(req: PriceRequest): Promise<PriceResponse> {
   const chain = await getChain(req.chain, req.network);
-  const connector = await getConnector(req.chain, req.network, req.connector);
-  return uniswapPrice(chain, connector, req);
+  if (chain.type_ === 'ethereumish') {
+    const connector = await getConnector(req.chain, req.network, req.connector);
+    return uniswapPrice(chain as Ethereumish, connector, req);
+  } else {
+    throw new Error('');
+  }
 }
 
 export async function trade(req: TradeRequest): Promise<TradeResponse> {
   const chain = await getChain(req.chain, req.network);
-  const connector = await getConnector(req.chain, req.network, req.connector);
-  return uniswapTrade(chain, connector, req);
+  if (chain.type_ === 'ethereumish') {
+    const connector = await getConnector(req.chain, req.network, req.connector);
+    return uniswapTrade(chain as Ethereumish, connector, req);
+  } else {
+    throw new Error('');
+  }
 }
 
 export async function estimateGas(
   req: NetworkSelectionRequest
 ): Promise<EstimateGasResponse> {
   const chain = await getChain(req.chain, req.network);
-  const connector = await getConnector(req.chain, req.network, req.connector);
-  return uniswapEstimateGas(chain, connector);
+  if (chain.type_ === 'ethereumish') {
+    const connector = await getConnector(req.chain, req.network, req.connector);
+    return uniswapEstimateGas(chain as Ethereumish, connector);
+  } else {
+    throw new Error('');
+  }
 }

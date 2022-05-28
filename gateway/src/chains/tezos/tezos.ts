@@ -66,6 +66,7 @@ export interface BlockHead {
 }
 
 export class Tezos {
+  private _type: string = 'ethereumish';
   private static _instances: { [name: string]: Tezos };
   public chainId: string;
 
@@ -116,6 +117,10 @@ export class Tezos {
 
   ready(): boolean {
     return this._ready;
+  }
+
+  public get type_(): string {
+    return this._type;
   }
 
   async init(): Promise<void> {

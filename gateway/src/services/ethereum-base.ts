@@ -24,6 +24,7 @@ export type NewBlockHandler = (bn: number) => void;
 export type NewDebugMsgHandler = (msg: any) => void;
 
 export class EthereumBase {
+  private _type: string = 'ethereumish';
   private _provider;
   protected tokenList: TokenInfo[] = [];
   private _tokenMap: Record<string, TokenInfo> = {};
@@ -68,6 +69,10 @@ export class EthereumBase {
 
   ready(): boolean {
     return this._ready;
+  }
+
+  public get type_(): string {
+    return this._type;
   }
 
   public get provider() {

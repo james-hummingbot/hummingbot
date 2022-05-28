@@ -3,15 +3,32 @@ import { Avalanche } from '../chains/avalanche/avalanche';
 import { Harmony } from '../chains/harmony/harmony';
 import { Uniswap } from '../connectors/uniswap/uniswap';
 import { Pangolin } from '../connectors/pangolin/pangolin';
+import { Tezos } from '../chains/tezos/tezos';
 import { Ethereumish } from './common-interfaces';
 
-export async function getChain(chain: string, network: string) {
+export async function getEthereumishChain(
+  chain: string,
+  network: string
+): Promise<Ethereumish> {
   let chainInstance: Ethereumish;
   if (chain === 'ethereum') chainInstance = Ethereum.getInstance(network);
   else if (chain === 'avalanche')
     chainInstance = Avalanche.getInstance(network);
   else if (chain === 'harmony') chainInstance = Harmony.getInstance(network);
   else throw new Error('unsupported chain');
+  if (!chainInstance.ready()) {
+    await chainInstance.init();
+  }
+  return chainInstance;
+}
+
+export async function getChain(
+  chain: string,
+  network: string
+): Promise<Ethereumish | Tezos> {
+  let chainInstance: Ethereumish | Tezos;
+  if (chain === 'tezos') chainInstance = Tezos.getInstance(network);
+  else chainInstance = await getEthereumishChain(chain, network);
   if (!chainInstance.ready()) {
     await chainInstance.init();
   }
