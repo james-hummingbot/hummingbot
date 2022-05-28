@@ -9,7 +9,7 @@ import {
 import axios from 'axios';
 // import fs from 'fs/promises';
 import { promises as fs } from 'fs';
-import { TokenListType, TokenValue, walletPath } from './base';
+import { TokenInfo, TokenListType, TokenValue, walletPath } from './base';
 import { EVMNonceManager } from './evm.nonce';
 import NodeCache from 'node-cache';
 import { EvmTxStorage } from './evm.tx-storage';
@@ -17,14 +17,7 @@ import fse from 'fs-extra';
 import { ConfigManagerCertPassphrase } from './config-manager-cert-passphrase';
 import { logger } from './logger';
 
-// information about an Ethereum token
-export interface TokenInfo {
-  chainId: number;
-  address: string;
-  name: string;
-  symbol: string;
-  decimals: number;
-}
+export { TokenInfo } from './base';
 
 export type NewBlockHandler = (bn: number) => void;
 

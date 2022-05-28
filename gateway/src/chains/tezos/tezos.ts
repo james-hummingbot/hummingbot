@@ -8,16 +8,7 @@ import { promises as fs } from 'fs';
 import { BigNumber } from 'ethers';
 import { getTezosConfig } from './tezos.config';
 import { logger } from '../../services/logger';
-import { TokenListType, TokenValue } from '../../services/base';
-
-export interface TokenInfo {
-  name: string;
-  symbol: string;
-  address: string;
-  decimals: number;
-  standard: string;
-  tokenId: number;
-}
+import { TokenInfo, TokenListType, TokenValue } from '../../services/base';
 
 export interface Account {
   address: string;
@@ -167,6 +158,15 @@ export class Tezos {
       ({ tokens } = JSON.parse(await fs.readFile(tokenListSource, 'utf8')));
     }
     return tokens;
+  }
+
+  public get storedTokenList(): TokenInfo[] {
+    return this.tokenList;
+  }
+
+  // return the Token object for a symbol
+  getTokenForSymbol(symbol: string): TokenInfo | null {
+    return this._tokenMap[symbol] ? this._tokenMap[symbol] : null;
   }
 
   // supports FA1.2 and FA2

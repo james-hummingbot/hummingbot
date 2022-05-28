@@ -81,7 +81,7 @@ export async function getStatus(
 }
 
 export async function getTokens(req: TokensRequest): Promise<TokensResponse> {
-  let connection: EthereumBase;
+  let connection: EthereumBase | Tezos;
   let tokens: TokenInfo[] = [];
 
   if (req.chain && req.network) {
@@ -91,6 +91,8 @@ export async function getTokens(req: TokensRequest): Promise<TokensResponse> {
       connection = Harmony.getInstance(req.network);
     } else if (req.chain === 'ethereum') {
       connection = Ethereum.getInstance(req.network);
+    } else if (req.chain === 'tezos') {
+      connection = Tezos.getInstance(req.network);
     } else {
       throw new HttpException(
         500,

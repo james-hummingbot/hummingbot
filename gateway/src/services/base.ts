@@ -121,3 +121,13 @@ export const toFractionString = (value: number | string): string | null => {
   }
   return null;
 };
+
+export interface TokenInfo {
+  chainId?: number;
+  name: string;
+  symbol: string;
+  address: string;
+  decimals: number;
+  standard?: string; // currently tezos only
+  tokenId?: number; // currently tezos only
+}
