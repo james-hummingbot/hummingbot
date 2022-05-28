@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { NextFunction, Router, Request, Response } from 'express';
 import { asyncHandler } from '../services/error-handler';
-import { balances, poll } from '../chains/ethereum/ethereum.controllers';
+import {
+  balances as ethereumBalances,
+  poll as ethereumPoll,
+} from '../chains/ethereum/ethereum.controllers';
+import { Ethereumish } from '../services/common-interfaces';
 import { getChain } from '../services/connection-manager';
 import {
   BalanceRequest,
@@ -64,7 +68,13 @@ export namespace NetworkRoutes {
       ) => {
         validateBalanceRequest(req.body);
         const chain = await getChain(req.body.chain, req.body.network);
-        res.status(200).json(await balances(chain, req.body));
+        if (chain.type_ === 'ethereumish') {
+          res
+            .status(200)
+            .json(await ethereumBalances(chain as Ethereumish, req.body));
+        } else {
+          res.status(400);
+        }
       }
     )
   );
@@ -78,7 +88,13 @@ export namespace NetworkRoutes {
       ) => {
         validatePollRequest(req.body);
         const chain = await getChain(req.body.chain, req.body.network);
-        res.status(200).json(await poll(chain, req.body));
+        if (chain.type_ === 'ethereumish') {
+          res
+            .status(200)
+            .json(await ethereumPoll(chain as Ethereumish, req.body));
+        } else {
+          res.status(400);
+        }
       }
     )
   );
