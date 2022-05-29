@@ -3,12 +3,22 @@
 
 // https://api.tzkt.io/#operation/Tokens_GetTokenBalances
 
-import axios from 'axios';
 import { promises as fs } from 'fs';
 import { BigNumber } from 'ethers';
 import { getTezosConfig } from './tezos.config';
 import { logger } from '../../services/logger';
-import { TokenInfo, TokenListType, TokenValue } from '../../services/base';
+import {
+  TokenInfo,
+  TokenListType,
+  TokenValue,
+  walletPath,
+} from '../../services/base';
+import { InMemorySigner } from '@taquito/signer';
+import { TezosToolkit } from '@taquito/taquito';
+import { ConfigManagerCertPassphrase } from '../../services/config-manager-cert-passphrase';
+import axios from 'axios';
+import fse from 'fs-extra';
+import crypto from 'crypto';
 
 export interface Account {
   address: string;
@@ -65,10 +75,17 @@ export interface BlockHead {
   level: number;
 }
 
+export interface WalletData {
+  iv: string;
+  encryptedPrivateKey: string;
+}
+
 export class Tezos {
-  private _type: string = 'ethereumish';
+  private _type: string = 'tezos';
+  public chainName: string = 'tezos';
   private static _instances: { [name: string]: Tezos };
   public chainId: string;
+  // public provider: TezosToolkit;
 
   protected tokenList: TokenInfo[] = [];
   private _tokenMap: Record<string, TokenInfo> = {};
@@ -213,8 +230,13 @@ export class Tezos {
 
   // https://api.tzkt.io/v1/operations/transactions/{hash}
   async getTransaction(txHash: string): Promise<TransactionResponse> {
-    return axios.get(
-      `https://api.tzkt.io/v1/operations/transactions/${txHash}`
+    return axios.get(`${this.tzktURL}/v1/operations/transactions/${txHash}`);
+  }
+
+  public getTokenBySymbol(tokenSymbol: string): TokenInfo | undefined {
+    return this.tokenList.find(
+      (token: TokenInfo) =>
+        token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
     );
   }
 
@@ -222,42 +244,63 @@ export class Tezos {
   // https://mainnet.smartpy.io/chains/main/blocks/head/header
   // get the current block number
   async getCurrentBlockNumber(): Promise<number> {
-    const block: BlockHead = await axios.get(`https://api.tzkt.io/v1/head`);
+    const block: BlockHead = await axios.get(`${this.tzktURL}/v1/head`);
     return block.level;
   }
 
-  // async getFA2Balance(
-  //   contract: Contract,
-  //   wallet: Wallet,
-  //   decimals: number
-  // ): Promise<TokenValue> {
-  //   logger.info('Requesting balance for owner ' + wallet.address + '.');
-  //   const balance: BigNumber = await contract.balanceOf(wallet.address);
-  //   logger.info(
-  //     `Raw balance of ${contract.address} for ` +
-  //       `${wallet.address}: ${balance.toString()}`
-  //   );
-  //   return { value: balance, decimals: decimals };
-  // }
+  async getWalletFromPrivateKey(privateKey: string): Promise<TezosToolkit> {
+    const wallet = new TezosToolkit(this.nodeURL);
+    wallet.setProvider({
+      signer: await InMemorySigner.fromSecretKey(privateKey),
+    });
+    return wallet;
+  }
 
-  // async loadTokens(
-  //   tokenListSource: string,
-  //   tokenListType: TokenListType
-  // ): Promise<void> {
-  //   this.tokenList = await this.getTokenList(tokenListSource, tokenListType);
-  //   if (this.tokenList) {
-  //     this.tokenList.forEach(
-  //       (token: TokenInfo) => (this._tokenMap[token.symbol] = token)
-  //     );
-  //   }
-  // }
+  async getWallet(address: string): Promise<TezosToolkit> {
+    const path = `${walletPath}/${this.chainName}`;
 
-  // public getTokenBySymbol(tokenSymbol: string): TokenInfo | undefined {
-  //   return this.tokenList.find(
-  //     (token: TokenInfo) =>
-  //       token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
-  //   );
-  // }
+    const rawData: string = await fse.readFile(
+      `${path}/${address}.json`,
+      'utf8'
+    );
+
+    const walletData: WalletData = JSON.parse(rawData);
+
+    const passphrase = ConfigManagerCertPassphrase.readPassphrase();
+    if (!passphrase) {
+      throw new Error('missing passphrase');
+    }
+    return await this.decrypt(
+      walletData.iv,
+      walletData.encryptedPrivateKey,
+      passphrase
+    );
+  }
+
+  encrypt(privateKey: string, password: string): WalletData {
+    const iv = crypto.randomBytes(16).toString('hex').slice(0, 16);
+    const encrypter = crypto.createCipheriv('aes-256-cbc', password, iv);
+    const encryptedPrivateKey =
+      encrypter.update(privateKey, 'utf8', 'hex') + encrypter.final('hex');
+    return { iv, encryptedPrivateKey };
+  }
+
+  async decrypt(
+    iv: string,
+    encryptedPrivateKey: string,
+    password: string
+  ): Promise<TezosToolkit> {
+    const decrypter = crypto.createDecipheriv('aes-256-cbc', password, iv);
+    const decryptedPrivateKey =
+      decrypter.update(encryptedPrivateKey, 'hex', 'utf8') +
+      decrypter.final('utf8');
+
+    const wallet = new TezosToolkit(this.nodeURL);
+    wallet.setProvider({
+      signer: await InMemorySigner.fromSecretKey(decryptedPrivateKey),
+    });
+    return wallet;
+  }
 }
 
 // import { TezosToolkit } from '@taquito/taquito';

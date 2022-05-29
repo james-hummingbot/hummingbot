@@ -7,7 +7,6 @@ import {
   Wallet,
 } from 'ethers';
 import axios from 'axios';
-// import fs from 'fs/promises';
 import { promises as fs } from 'fs';
 import { TokenInfo, TokenListType, TokenValue, walletPath } from './base';
 import { EVMNonceManager } from './evm.nonce';

@@ -3,6 +3,7 @@ import { Avalanche } from '../../chains/avalanche/avalanche';
 import { Ethereum } from '../../chains/ethereum/ethereum';
 import { Solana } from '../../chains/solana/solana';
 import { Harmony } from '../../chains/harmony/harmony';
+import { Tezos } from '../../chains/tezos/tezos';
 
 import {
   AddWalletRequest,
@@ -56,6 +57,14 @@ export async function addWallet(
     const harmony = Harmony.getInstance(req.network);
     address = harmony.getWalletFromPrivateKey(req.privateKey).address;
     encryptedPrivateKey = await harmony.encrypt(req.privateKey, passphrase);
+  } else if (req.chain === 'tezos') {
+    const tezos = Tezos.getInstance(req.network);
+    const tezosWallet = await tezos.getWalletFromPrivateKey(req.privateKey);
+    address = await tezosWallet.signer.publicKeyHash();
+    // this is really encrypted private key and IV
+    encryptedPrivateKey = JSON.stringify(
+      await tezos.encrypt(req.privateKey, passphrase)
+    );
   } else {
     throw new HttpException(
       500,
