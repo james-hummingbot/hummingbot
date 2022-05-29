@@ -16,68 +16,16 @@ import {
 import { InMemorySigner } from '@taquito/signer';
 import { TezosToolkit } from '@taquito/taquito';
 import { ConfigManagerCertPassphrase } from '../../services/config-manager-cert-passphrase';
+import {
+  AccountStatusResponse,
+  BlockHeadResponse,
+  TokenResponse,
+  TransactionResponse,
+  TzktApiClient,
+} from './tzkt.api.client';
 import axios from 'axios';
 import fse from 'fs-extra';
 import crypto from 'crypto';
-
-export interface Account {
-  address: string;
-  alias?: string;
-}
-
-export interface AccountStatus {
-  balance: number;
-}
-
-export interface Metadata {
-  name: string;
-  symbol: string;
-  decimals: string;
-}
-
-export interface Token {
-  id: number; // internal to tzkt
-  contract: Account;
-  tokenId: string; // FA1.2 = 0, FA2 is 0 or greater
-  standard: string;
-  metadata: Metadata;
-}
-
-export interface TokenResponse {
-  id: number;
-  account: Account;
-  token: Token;
-  balance: string; // BigNumber?
-}
-
-export interface TransactionResponse {
-  id: number;
-  level: number;
-  timestamp: string;
-  block: string;
-  hash: string;
-  counter: number;
-  sender: Account;
-  gasLimit: number;
-  gasUsed: number;
-  storageLimit: number;
-  storageUsed: number;
-  bakerFee: number;
-  storageFee: number;
-  allocationFee: number;
-  target: Account;
-  amount: number;
-  parameter: any;
-  storage: any;
-  status: string;
-  hasInternals: boolean;
-}
-
-export interface BlockHead {
-  chain?: string;
-  chainId?: string;
-  level: number;
-}
 
 export interface WalletData {
   iv: string;
@@ -99,6 +47,7 @@ export class Tezos {
 
   public nodeURL: string;
   public tzktURL: string;
+  public _tzktApiClient: TzktApiClient;
   public nativeCurrencySymbol: string;
 
   private _ready: boolean = false;
@@ -118,6 +67,7 @@ export class Tezos {
       (this.nativeCurrencySymbol = config.nativeCurrencySymbol);
     this.nodeURL = config.network.nodeURL;
     this.tzktURL = config.network.tzktURL;
+    this._tzktApiClient = new TzktApiClient(config.network.tzktURL);
   }
 
   public static getInstance(network: string): Tezos {
@@ -198,10 +148,17 @@ export class Tezos {
   // returns the Native balance, convert BigNumber to string
   async getNativeBalance(wallet: TezosToolkit): Promise<TokenValue> {
     const address = await wallet.signer.publicKeyHash();
-    const accountStatus: AccountStatus = await axios.get(
-      `${this.tzktURL}/v1/accounts/${address}`
-    );
+    const accountStatus: AccountStatusResponse =
+      await this._tzktApiClient.getAccountStatus(address);
+
     return { value: BigNumber.from(accountStatus.balance), decimals: 6 };
+  }
+
+  async getNonce(wallet: TezosToolkit): Promise<number> {
+    const address = await wallet.signer.publicKeyHash();
+    const accountStatus: AccountStatusResponse =
+      await this._tzktApiClient.getAccountStatus(address);
+    return accountStatus.counter;
   }
 
   // supports FA1.2 and FA2
@@ -211,8 +168,10 @@ export class Tezos {
     tokenId: number,
     decimals: number
   ): Promise<TokenValue> {
-    const tokens: Array<TokenResponse> = await axios.get(
-      `${this.tzktURL}/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`
+    const tokens: Array<TokenResponse> = await this._tzktApiClient.getTokens(
+      walletAddress,
+      contractAddress,
+      tokenId
     );
     let value = BigNumber.from(0);
     if (tokens.length > 0) {
@@ -241,9 +200,8 @@ export class Tezos {
     return { value: BigNumber.from(0), decimals: decimals };
   }
 
-  // https://api.tzkt.io/v1/operations/transactions/{hash}
   async getTransaction(txHash: string): Promise<TransactionResponse> {
-    return axios.get(`${this.tzktURL}/v1/operations/transactions/${txHash}`);
+    return this._tzktApiClient.getTransaction(txHash);
   }
 
   public getTokenBySymbol(tokenSymbol: string): TokenInfo | undefined {
@@ -253,11 +211,8 @@ export class Tezos {
     );
   }
 
-  // https://api.tzkt.io/v1/head
-  // https://mainnet.smartpy.io/chains/main/blocks/head/header
-  // get the current block number
   async getCurrentBlockNumber(): Promise<number> {
-    const block: BlockHead = await axios.get(`${this.tzktURL}/v1/head`);
+    const block: BlockHeadResponse = await this._tzktApiClient.getBlockHead();
     return block.level;
   }
 
