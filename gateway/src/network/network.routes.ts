@@ -5,7 +5,8 @@ import {
   balances as ethereumBalances,
   poll as ethereumPoll,
 } from '../chains/ethereum/ethereum.controllers';
-// import { balances as tezosBalances } from '../chains/tezos/tezos.controllers';
+import { Tezos } from '../chains/tezos/tezos';
+import { balances as tezosBalances } from '../chains/tezos/tezos.controllers';
 import { Ethereumish } from '../services/common-interfaces';
 import { getChain } from '../services/connection-manager';
 import {
@@ -73,8 +74,8 @@ export namespace NetworkRoutes {
           res
             .status(200)
             .json(await ethereumBalances(chain as Ethereumish, req.body));
-          // } else if (chain.type_ === 'tezos') {
-          //   res.status(200).json(await tezosBalances(chain as Tezos, req.body));
+        } else if (chain.type_ === 'tezos') {
+          res.status(200).json(await tezosBalances(chain as Tezos, req.body));
         } else {
           res.status(400);
         }
