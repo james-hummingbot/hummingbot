@@ -25,6 +25,10 @@ export interface Account {
   alias?: string;
 }
 
+export interface AccountStatus {
+  balance: number;
+}
+
 export interface Metadata {
   name: string;
   symbol: string;
@@ -191,6 +195,15 @@ export class Tezos {
     return this._tokenMap[symbol] ? this._tokenMap[symbol] : null;
   }
 
+  // returns the Native balance, convert BigNumber to string
+  async getNativeBalance(wallet: TezosToolkit): Promise<TokenValue> {
+    const address = await wallet.signer.publicKeyHash();
+    const accountStatus: AccountStatus = await axios.get(
+      `${this.tzktURL}/v1/accounts/${address}`
+    );
+    return { value: BigNumber.from(accountStatus.balance), decimals: 6 };
+  }
+
   // supports FA1.2 and FA2
   async getTokenBalance(
     contractAddress: string,
@@ -199,7 +212,7 @@ export class Tezos {
     decimals: number
   ): Promise<TokenValue> {
     const tokens: Array<TokenResponse> = await axios.get(
-      `https://api.tzkt.io/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`
+      `${this.tzktURL}/v1/tokens/balances?account=${walletAddress}&token.contract=${contractAddress}&token.tokenId=${tokenId}`
     );
     let value = BigNumber.from(0);
     if (tokens.length > 0) {
