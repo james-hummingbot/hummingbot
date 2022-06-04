@@ -14,6 +14,9 @@ export const invalidEthPrivateKeyError: string =
 export const invalidSolPrivateKeyError: string =
   'The privateKey param is not a valid Solana private key (64 bytes, base 58 encoded).';
 
+export const invalidTezosPrivateKeyError: string =
+  'The privateKey param is not a valid Tezos private key (98 bytes, base 58 encoded).';
+
 // test if a string matches the shape of an Ethereum private key
 export const isEthPrivateKey = (str: string): boolean => {
   return /^(0x)?[a-fA-F0-9]{64}$/.test(str);
@@ -24,24 +27,37 @@ export const isSolPrivateKey = (str: string): boolean => {
   return isBase58(str) && bs58.decode(str).length == 64;
 };
 
+export const isTezosPrivateKey = (str: string): boolean => {
+  return str.length == 98;
+};
+
 // given a request, look for a key called privateKey that is an Ethereum private key
 export const validatePrivateKey: Validator = mkBranchingValidator(
   'chain',
-  (req, key) => req[key] === 'solana',
+  (req, key) => req[key] === 'tezos',
   mkValidator(
     'privateKey',
-    invalidSolPrivateKeyError,
-    (val) => typeof val === 'string' && isSolPrivateKey(val)
+    invalidTezosPrivateKeyError,
+    (val) => typeof val === 'string' && isTezosPrivateKey(val)
   ),
-  mkValidator(
-    'privateKey',
-    invalidEthPrivateKeyError,
-    (val) => typeof val === 'string' && isEthPrivateKey(val)
+  mkBranchingValidator(
+    'chain',
+    (req, key) => req[key] === 'solana',
+    mkValidator(
+      'privateKey',
+      invalidSolPrivateKeyError,
+      (val) => typeof val === 'string' && isSolPrivateKey(val)
+    ),
+    mkValidator(
+      'privateKey',
+      invalidEthPrivateKeyError,
+      (val) => typeof val === 'string' && isEthPrivateKey(val)
+    )
   )
 );
 
 export const invalidChainError: string =
-  'chain must be "ethereum", "solana", "avalanche" or "harmony"';
+  'chain must be "ethereum", "solana", "avalanche", "harmony" or "tezos"';
 
 export const invalidNetworkError: string =
   'expected a string for the network key';
@@ -56,7 +72,8 @@ export const validateChain: Validator = mkValidator(
     (val === 'ethereum' ||
       val === 'avalanche' ||
       val === 'solana' ||
-      val === 'harmony')
+      val === 'harmony' ||
+      val === 'tezos')
 );
 
 export const validateNetwork: Validator = mkValidator(

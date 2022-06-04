@@ -246,11 +246,16 @@ export class Tezos {
   }
 
   encrypt(privateKey: string, password: string): WalletData {
-    const iv = crypto.randomBytes(16).toString('hex').slice(0, 16);
-    const encrypter = crypto.createCipheriv('aes-256-cbc', password, iv);
+    const iv = crypto.randomBytes(16);
+    const key = crypto
+      .createHash('sha256')
+      .update(String(password))
+      .digest('base64')
+      .substr(0, 32);
+    const encrypter = crypto.createCipheriv('aes-256-cbc', key, iv);
     const encryptedPrivateKey =
       encrypter.update(privateKey, 'utf8', 'hex') + encrypter.final('hex');
-    return { iv, encryptedPrivateKey };
+    return { iv: iv.toString('hex').slice(0, 16), encryptedPrivateKey };
   }
 
   async decrypt(
@@ -258,7 +263,12 @@ export class Tezos {
     encryptedPrivateKey: string,
     password: string
   ): Promise<TezosToolkit> {
-    const decrypter = crypto.createDecipheriv('aes-256-cbc', password, iv);
+    const key = crypto
+      .createHash('sha256')
+      .update(String(password))
+      .digest('base64')
+      .substr(0, 32);
+    const decrypter = crypto.createDecipheriv('aes-256-cbc', key, iv);
     const decryptedPrivateKey =
       decrypter.update(encryptedPrivateKey, 'hex', 'utf8') +
       decrypter.final('utf8');

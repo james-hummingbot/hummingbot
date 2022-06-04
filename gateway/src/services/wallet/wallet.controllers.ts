@@ -61,7 +61,7 @@ export async function addWallet(
     const tezos = Tezos.getInstance(req.network);
     const tezosWallet = await tezos.getWalletFromPrivateKey(req.privateKey);
     address = await tezosWallet.signer.publicKeyHash();
-    // this is really encrypted private key and IV
+    // this is different from ethereum, we store the encrypted private key and IV
     encryptedPrivateKey = JSON.stringify(
       await tezos.encrypt(req.privateKey, passphrase)
     );

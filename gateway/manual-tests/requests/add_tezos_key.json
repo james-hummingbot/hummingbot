@@ -1,0 +1,5 @@
+{
+  "privateKey": "$TEZOS_PRIVATE_KEY",
+  "chain": "tezos",
+  "network": "mainnet"
+}
