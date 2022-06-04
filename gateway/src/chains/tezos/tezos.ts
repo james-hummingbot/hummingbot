@@ -235,6 +235,8 @@ export class Tezos {
     const walletData: WalletData = JSON.parse(rawData);
 
     const passphrase = ConfigManagerCertPassphrase.readPassphrase();
+    console.log(walletData);
+    console.log(passphrase);
     if (!passphrase) {
       throw new Error('missing passphrase');
     }
@@ -255,7 +257,10 @@ export class Tezos {
     const encrypter = crypto.createCipheriv('aes-256-cbc', key, iv);
     const encryptedPrivateKey =
       encrypter.update(privateKey, 'utf8', 'hex') + encrypter.final('hex');
-    return { iv: iv.toString('hex').slice(0, 16), encryptedPrivateKey };
+    return {
+      iv: iv.toString('hex'),
+      encryptedPrivateKey: encryptedPrivateKey.toString(),
+    };
   }
 
   async decrypt(
@@ -268,7 +273,11 @@ export class Tezos {
       .update(String(password))
       .digest('base64')
       .substr(0, 32);
-    const decrypter = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    const decrypter = crypto.createDecipheriv(
+      'aes-256-cbc',
+      key,
+      Buffer.from(iv, 'hex')
+    );
     const decryptedPrivateKey =
       decrypter.update(encryptedPrivateKey, 'hex', 'utf8') +
       decrypter.final('utf8');

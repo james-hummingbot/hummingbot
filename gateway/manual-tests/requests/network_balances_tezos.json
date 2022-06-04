@@ -1,0 +1,6 @@
+{
+  "chain": "tezos",
+  "network": "mainnet",
+  "address": "$TEZOS_ADDRESS",
+  "tokenSymbols": ["CTEZ", "ETHTZ", "HDAO", "TZBTC", "WXTZ"]
+}
