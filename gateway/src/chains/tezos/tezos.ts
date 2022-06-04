@@ -288,6 +288,15 @@ export class Tezos {
     });
     return wallet;
   }
+
+  // getContract(
+  //   tokenAddress: string,
+  //   signerOrProvider?: Wallet | Provider
+  // ): Contract {
+  //   return tokenAddress === MKR_ADDRESS
+  //     ? new Contract(tokenAddress, abi.MKRAbi, signerOrProvider)
+  //     : new Contract(tokenAddress, abi.ERC20Abi, signerOrProvider);
+  // }
 }
 
 // import { TezosToolkit } from '@taquito/taquito';
