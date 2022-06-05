@@ -29,11 +29,8 @@ import {
   NonceResponse,
   ApproveRequest,
   ApproveResponse,
-
-  // AllowancesRequest,
-  // AllowancesResponse,
-  // ApproveRequest,
-  // ApproveResponse,
+  AllowancesRequest,
+  AllowancesResponse,
   // CancelRequest,
   // CancelResponse,
 } from '../../evm/evm.requests';
@@ -61,6 +58,43 @@ export const getTokenSymbolsToTokens = (
 
   return tokens;
 };
+
+export async function allowances(
+  tezos: Tezos,
+  req: AllowancesRequest
+): Promise<AllowancesResponse | string> {
+  const initTime = Date.now();
+  const wallet = await tezos.getWallet(req.address);
+  const walletAddress = await wallet.signer.publicKeyHash();
+  const tokens = getTokenSymbolsToTokens(tezos, req.tokenSymbols);
+  const spender = req.spender;
+
+  const approvals: Record<string, string> = {};
+  await Promise.all(
+    Object.keys(tokens).map(async (symbol) => {
+      const tokenId = tokens[symbol].tokenId;
+      if (tokenId !== undefined) {
+        approvals[symbol] = tokenValueToString(
+          await tezos.getTokenAllowance(
+            tokens[symbol].address,
+            walletAddress,
+            spender,
+            tokenId,
+            tokens[symbol].decimals
+          )
+        );
+      }
+    })
+  );
+
+  return {
+    network: tezos.chainName,
+    timestamp: initTime,
+    latency: latency(initTime, Date.now()),
+    spender: spender,
+    approvals: approvals,
+  };
+}
 
 export async function balances(
   tezos: Tezos,
