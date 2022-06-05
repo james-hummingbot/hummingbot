@@ -9,7 +9,8 @@ import {
   TOKEN_NOT_SUPPORTED_ERROR_MESSAGE,
 } from '../../services/error-handler';
 import { Tezos } from './tezos';
-import { TezosToolkit } from '@taquito/taquito';
+import { TransactionOperation, TezosToolkit } from '@taquito/taquito';
+import { OperationContentsAndResultTransaction } from '@taquito/rpc';
 import {
   TokenInfo,
   bigNumberWithDecimalToStr,
@@ -36,7 +37,6 @@ import {
   // CancelRequest,
   // CancelResponse,
 } from '../../evm/evm.requests';
-import { OperationContentsAndResultTransaction } from '@taquito/rpc';
 
 export async function nonce(
   tezos: Tezos,
@@ -158,12 +158,34 @@ export async function approve(
 
   // convert strings to BigNumber
   // call approve function
-  const approvalOperation = await contract.methods
-    .approve({ spender: spender, value: amountBigNumber })
-    .send();
-  const o = approvalOperation.operationResults;
-  if (o.length > 0) {
-    const op = o[0];
+  let approvalOperation: TransactionOperation | null = null;
+  if (fullToken.standard == 'fa1.2') {
+    approvalOperation = await contract.methods
+      .approve({ spender: spender, value: amountBigNumber })
+      .send();
+  } else if (fullToken.standard == 'fa2' && fullToken.tokenId != null) {
+    approvalOperation = await contract.methods
+      .update_operators({
+        add_operator: {
+          owner: address,
+          operator: spender,
+          token_id: fullToken.tokenId,
+        },
+      })
+      .send();
+  } else {
+    throw new HttpException(
+      500,
+      TOKEN_NOT_SUPPORTED_ERROR_MESSAGE,
+      TOKEN_NOT_SUPPORTED_ERROR_CODE
+    );
+  }
+
+  if (
+    approvalOperation !== null &&
+    approvalOperation.operationResults.length > 0
+  ) {
+    const op = approvalOperation.operationResults[0];
     return {
       network: tezos.chainName,
       timestamp: initTime,
