@@ -72,18 +72,15 @@ export async function allowances(
   const approvals: Record<string, string> = {};
   await Promise.all(
     Object.keys(tokens).map(async (symbol) => {
-      const tokenId = tokens[symbol].tokenId;
-      if (tokenId !== undefined) {
-        approvals[symbol] = tokenValueToString(
-          await tezos.getTokenAllowance(
-            tokens[symbol].address,
-            walletAddress,
-            spender,
-            tokenId,
-            tokens[symbol].decimals
-          )
-        );
-      }
+      approvals[symbol] = tokenValueToString(
+        await tezos.getTokenAllowance(
+          wallet,
+          tokens[symbol].address,
+          walletAddress,
+          spender,
+          tokens[symbol]
+        )
+      );
     })
   );
 

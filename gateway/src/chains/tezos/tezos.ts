@@ -182,11 +182,11 @@ export class Tezos {
   }
 
   async getTokenAllowance(
-    _contractAddress: string,
+    wallet: TezosToolkit,
+    contractAddress: string,
     walletAddress: string,
     spender: string,
-    _tokenId: number,
-    decimals: number
+    tokenInfo: TokenInfo
   ): Promise<TokenValue> {
     logger.info(
       'Requesting spender ' +
@@ -195,9 +195,21 @@ export class Tezos {
         walletAddress +
         '.'
     );
-    // const allowance = await contract.allowance(wallet.address, spender);
-    // logger.info(allowance);
-    return { value: BigNumber.from(0), decimals: decimals };
+
+    const contract = await wallet.contract.at(contractAddress);
+
+    let value = BigNumber.from(0);
+    if (tokenInfo.standard === 'fa1.2') {
+      const allowance: string = await contract.views
+        .getAllowance({ owner: walletAddress, spender })
+        .read();
+      value = BigNumber.from(allowance);
+    } else if (tokenInfo.standard === 'fa2' && tokenInfo.tokenId !== null) {
+      // TODO: unsupported at the moment. It looks like there is not a
+      // standard way to read operators for all FA2 tokens.
+    }
+
+    return { value, decimals: tokenInfo.decimals };
   }
 
   async getTransaction(txHash: string): Promise<TransactionResponse> {
