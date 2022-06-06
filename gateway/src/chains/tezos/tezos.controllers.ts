@@ -31,8 +31,6 @@ import {
   ApproveResponse,
   AllowancesRequest,
   AllowancesResponse,
-  // CancelRequest,
-  // CancelResponse,
 } from '../../evm/evm.requests';
 
 export async function nonce(

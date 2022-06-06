@@ -44,15 +44,3 @@ export interface ApproveResponse {
   nonce: number;
   approval: CustomTransaction;
 }
-
-export interface CancelRequest extends NetworkSelectionRequest {
-  nonce: number; // the nonce of the transaction to be canceled
-  address: string; // the user's public Tezos key
-}
-
-export interface CancelResponse {
-  network: string;
-  timestamp: number;
-  latency: number;
-  txHash: string | undefined;
-}

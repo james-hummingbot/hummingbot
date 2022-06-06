@@ -1,5 +1,4 @@
 import {
-  isNaturalNumberString,
   validateTokenSymbols,
   mkValidator,
   mkRequestValidator,
@@ -30,50 +29,32 @@ export const invalidChainError: string = 'The chain param is not a string.';
 
 export const invalidNetworkError: string = 'The network param is not a string.';
 
-// test if a string matches the shape of an Ethereum address
+// test if a string matches the shape of an Tezos address
 export const isAddress = (str: string): boolean => {
-  return /^0x[a-fA-F0-9]{40}$/.test(str);
+  return /^tz\d[1-9A-HJ-NP-Za-km-z]{33}$/.test(str);
 };
 
-// given a request, look for a key called address that is an Ethereum wallet
+// given a request, look for a key called address that is an Tezos wallet
 export const validateAddress: Validator = mkValidator(
   'address',
   invalidAddressError,
   (val) => typeof val === 'string' && isAddress(val)
 );
 
-// given a request, look for a key called spender that is 'uniswap' or an Ethereum address
+// given a request, look for a key called spender that is 'liquidity-baking' or an Tezos address
 export const validateSpender: Validator = mkValidator(
   'spender',
   invalidSpenderError,
   (val) =>
-    typeof val === 'string' &&
-    (val === 'uniswap' ||
-      val === 'pangolin' ||
-      val === 'traderjoe' ||
-      val === 'sushiswap' ||
-      val === 'viperswap' ||
-      isAddress(val))
+    typeof val === 'string' && (val === 'liquidity-baking' || isAddress(val))
 );
 
 export const validateNonce: Validator = mkValidator(
   'nonce',
   invalidNonceError,
-  (val) => typeof val === 'number' && val >= 0 && Number.isInteger(val),
-  true
-);
-
-export const validateMaxFeePerGas: Validator = mkValidator(
-  'maxFeePerGas',
-  invalidMaxFeePerGasError,
-  (val) => typeof val === 'string' && isNaturalNumberString(val),
-  true
-);
-
-export const validateMaxPriorityFeePerGas: Validator = mkValidator(
-  'maxPriorityFeePerGas',
-  invalidMaxPriorityFeePerGasError,
-  (val) => typeof val === 'string' && isNaturalNumberString(val),
+  (val) =>
+    typeof val === 'undefined' ||
+    (typeof val === 'number' && val >= 0 && Number.isInteger(val)),
   true
 );
 
@@ -90,7 +71,6 @@ export const validateNetwork: Validator = mkValidator(
 );
 
 // request types and corresponding validators
-
 export const validateNonceRequest: RequestValidator = mkRequestValidator([
   validateAddress,
 ]);
@@ -112,11 +92,4 @@ export const validateApproveRequest: RequestValidator = mkRequestValidator([
   validateToken,
   validateAmount,
   validateNonce,
-  validateMaxFeePerGas,
-  validateMaxPriorityFeePerGas,
-]);
-
-export const validateCancelRequest: RequestValidator = mkRequestValidator([
-  validateNonce,
-  validateAddress,
 ]);

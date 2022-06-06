@@ -37,7 +37,6 @@ export class Tezos {
   public chainName: string = 'tezos';
   private static _instances: { [name: string]: Tezos };
   public chainId: string;
-  // public provider: TezosToolkit;
 
   protected tokenList: TokenInfo[] = [];
   private _tokenMap: Record<string, TokenInfo> = {};
@@ -57,11 +56,6 @@ export class Tezos {
   private constructor(network: string) {
     const config = getTezosConfig('tezos', network);
     this.chainId = config.network.chainId;
-    //   this._gasPrice = config.manualGasPrice;
-    // this._gasPriceRefreshInterval =
-    //   config.network.gasPriceRefreshInterval !== undefined
-    //     ? config.network.gasPriceRefreshInterval
-    //     : null;
     (this.tokenListSource = config.network.tokenListSource),
       (this.tokenListType = config.network.tokenListType),
       (this.nativeCurrencySymbol = config.nativeCurrencySymbol);
@@ -71,7 +65,6 @@ export class Tezos {
   }
 
   public static getInstance(network: string): Tezos {
-    logger.info('yo');
     if (Tezos._instances === undefined) {
       Tezos._instances = {};
     }
@@ -300,15 +293,6 @@ export class Tezos {
     });
     return wallet;
   }
-
-  // getContract(
-  //   tokenAddress: string,
-  //   signerOrProvider?: Wallet | Provider
-  // ): Contract {
-  //   return tokenAddress === MKR_ADDRESS
-  //     ? new Contract(tokenAddress, abi.MKRAbi, signerOrProvider)
-  //     : new Contract(tokenAddress, abi.ERC20Abi, signerOrProvider);
-  // }
 }
 
 // import { TezosToolkit } from '@taquito/taquito';
