@@ -11,23 +11,22 @@ import pandas as pd
 from aioresponses.core import aioresponses
 from bidict import bidict
 
-import hummingbot.connector.derivative.binance_perpetual.binance_perpetual_utils as utils
+import hummingbot.connector.derivative.binance_perpetual.binance_perpetual_web_utils as web_utils
 import hummingbot.connector.derivative.binance_perpetual.constants as CONSTANTS
-from hummingbot.connector.derivative.binance_perpetual.binance_perpetual_api_order_book_data_source import \
-    BinancePerpetualAPIOrderBookDataSource
-from hummingbot.connector.derivative.binance_perpetual.binance_perpetual_derivative import \
-    BinancePerpetualDerivative
+from hummingbot.client.config.client_config_map import ClientConfigMap
+from hummingbot.client.config.config_helpers import ClientConfigAdapter
+from hummingbot.connector.derivative.binance_perpetual.binance_perpetual_api_order_book_data_source import (
+    BinancePerpetualAPIOrderBookDataSource,
+)
+from hummingbot.connector.derivative.binance_perpetual.binance_perpetual_derivative import BinancePerpetualDerivative
+from hummingbot.connector.test_support.network_mocking_assistant import NetworkMockingAssistant
+from hummingbot.connector.utils import get_new_client_order_id
 from hummingbot.core.data_type.common import OrderType, PositionAction, PositionMode, TradeType
-from hummingbot.core.data_type.in_flight_order import OrderState, InFlightOrder
+from hummingbot.core.data_type.in_flight_order import InFlightOrder, OrderState
+from hummingbot.core.data_type.limit_order import LimitOrder
 from hummingbot.core.data_type.trade_fee import TokenAmount
 from hummingbot.core.event.event_logger import EventLogger
-from hummingbot.core.event.events import (
-    BuyOrderCompletedEvent,
-    MarketEvent,
-    OrderFilledEvent,
-    SellOrderCompletedEvent,
-)
-from test.hummingbot.connector.network_mocking_assistant import NetworkMockingAssistant
+from hummingbot.core.event.events import MarketEvent, OrderFilledEvent
 
 
 class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
@@ -56,8 +55,10 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         self.ws_sent_messages = []
         self.ws_incoming_messages = asyncio.Queue()
         self.resume_test_event = asyncio.Event()
+        self.client_config_map = ClientConfigAdapter(ClientConfigMap())
 
         self.exchange = BinancePerpetualDerivative(
+            client_config_map=self.client_config_map,
             binance_perpetual_api_key="testAPIKey",
             binance_perpetual_api_secret="testSecret",
             trading_pairs=[self.trading_pair],
@@ -68,6 +69,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         }
 
         self.exchange._set_current_timestamp(1640780000)
+        self.exchange._binance_time_synchronizer.add_time_offset_ms_sample(0)
         self.exchange.logger().setLevel(1)
         self.exchange.logger().addHandler(self)
         self.exchange._client_order_tracker.logger().setLevel(1)
@@ -235,7 +237,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_existing_account_position_detected_on_positions_update(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -252,7 +254,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_account_position_updated_on_positions_update(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -277,7 +279,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_new_account_position_detected_on_positions_update(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -298,7 +300,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_closed_account_position_removed_on_positions_update(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -321,7 +323,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     @aioresponses()
     @patch("aiohttp.ClientSession.ws_connect", new_callable=AsyncMock)
     def test_new_account_position_detected_on_stream_event(self, mock_api, ws_connect_mock):
-        url = utils.rest_url(CONSTANTS.BINANCE_USER_STREAM_ENDPOINT, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.BINANCE_USER_STREAM_ENDPOINT, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         listen_key_response = {"listenKey": self.listen_key}
         mock_api.post(regex_url, body=json.dumps(listen_key_response))
@@ -334,7 +336,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         account_update = self._get_account_update_ws_event_single_position_dict()
         self.mocking_assistant.add_websocket_aiohttp_message(ws_connect_mock.return_value, json.dumps(account_update))
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -349,7 +351,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     @aioresponses()
     @patch("aiohttp.ClientSession.ws_connect", new_callable=AsyncMock)
     def test_account_position_updated_on_stream_event(self, mock_api, ws_connect_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -359,7 +361,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         task = self.ev_loop.create_task(self.exchange._update_positions())
         self.async_run_with_timeout(task)
 
-        url = utils.rest_url(CONSTANTS.BINANCE_USER_STREAM_ENDPOINT, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.BINANCE_USER_STREAM_ENDPOINT, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         listen_key_response = {"listenKey": self.listen_key}
         mock_api.post(regex_url, body=json.dumps(listen_key_response))
@@ -385,7 +387,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     @aioresponses()
     @patch("aiohttp.ClientSession.ws_connect", new_callable=AsyncMock)
     def test_closed_account_position_removed_on_stream_event(self, mock_api, ws_connect_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.POSITION_INFORMATION_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -395,7 +397,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         task = self.ev_loop.create_task(self.exchange._update_positions())
         self.async_run_with_timeout(task)
 
-        url = utils.rest_url(CONSTANTS.BINANCE_USER_STREAM_ENDPOINT, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.BINANCE_USER_STREAM_ENDPOINT, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         listen_key_response = {"listenKey": self.listen_key}
         mock_api.post(regex_url, body=json.dumps(listen_key_response))
@@ -418,7 +420,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     def test_set_position_mode_initial_mode_is_none(self, mock_api):
         self.assertIsNone(self.exchange.position_mode)
 
-        url = utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         get_position_mode_response = {"dualSidePosition": False}  # True: Hedge Mode; False: One-way Mode
         post_position_mode_response = {"code": 200, "msg": "success"}
@@ -433,7 +435,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     @aioresponses()
     def test_set_position_initial_mode_unchanged(self, mock_api):
         self.exchange._position_mode = PositionMode.ONEWAY
-        url = utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         get_position_mode_response = {"dualSidePosition": False}  # True: Hedge Mode; False: One-way Mode
 
@@ -446,7 +448,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     @aioresponses()
     def test_set_position_mode_diff_initial_mode_change_successful(self, mock_api):
         self.exchange._position_mode = PositionMode.ONEWAY
-        url = utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         get_position_mode_response = {"dualSidePosition": False}  # True: Hedge Mode; False: One-way Mode
         post_position_mode_response = {"code": 200, "msg": "success"}
@@ -462,7 +464,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     @aioresponses()
     def test_set_position_mode_diff_initial_mode_change_fail(self, mock_api):
         self.exchange._position_mode = PositionMode.ONEWAY
-        url = utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
+        url = web_utils.rest_url(CONSTANTS.CHANGE_POSITION_MODE_URL, domain=self.domain)
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
         get_position_mode_response = {"dualSidePosition": False}  # True: Hedge Mode; False: One-way Mode
         post_position_mode_response = {"code": -4059, "msg": "No need to change position side."}
@@ -630,8 +632,6 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
                          fill_event.trade_fee.flat_fees)
 
         self.assertEqual(1, len(self.buy_order_completed_logger.event_log))
-        buy_complete_event: BuyOrderCompletedEvent = self.buy_order_completed_logger.event_log[0]
-        self.assertEqual(Decimal(50), buy_complete_event.fee_amount)
 
     def test_sell_order_fill_event_takes_fee_from_update_event(self):
         self.exchange.start_tracking_order(
@@ -755,8 +755,6 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
                          fill_event.trade_fee.flat_fees)
 
         self.assertEqual(1, len(self.sell_order_completed_logger.event_log))
-        sell_complete_event: SellOrderCompletedEvent = self.sell_order_completed_logger.event_log[0]
-        self.assertEqual(Decimal(50), sell_complete_event.fee_amount)
 
     def test_order_fill_event_ignored_for_repeated_trade_id(self):
         self.exchange.start_tracking_order(
@@ -1005,7 +1003,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
         self.assertTrue(self._is_logged(
             "INFO",
-            f"Successfully cancelled order {order.client_order_id}."
+            f"Successfully canceled order {order.client_order_id}."
         ))
 
     def test_user_stream_event_listener_raises_cancelled_error(self):
@@ -1090,7 +1088,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
                    "symbol": "COINALPHAHBOT",
                    "time": 1000}]
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ACCOUNT_TRADE_LIST_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1137,7 +1135,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
             position=PositionAction.OPEN,
         )
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ACCOUNT_TRADE_LIST_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1211,7 +1209,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
                  "workingType": "CONTRACT_PRICE",
                  "priceProtect": False}
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1255,7 +1253,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
             "symbol": symbol
         }
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.SET_LEVERAGE_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1277,7 +1275,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
                     "maxNotionalValue": "1000000",
                     "symbol": symbol}
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.SET_LEVERAGE_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1293,7 +1291,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
     def test_fetch_funding_payment_successful(self, req_mock):
         income_history = self._get_income_history_dict()
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.GET_INCOME_HISTORY_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url_income_history = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1302,7 +1300,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
         funding_info = self._get_funding_info_dict()
 
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.MARK_PRICE_URL, domain=self.domain
         )
         regex_url_funding_info = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1328,7 +1326,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_fetch_funding_payment_failed(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.GET_INCOME_HISTORY_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url_income_history = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1344,7 +1342,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_cancel_all_successful(self, mocked_api):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1390,12 +1388,12 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_cancel_all_unknown_order(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
 
-        cancel_response = {"code": -2011, "msg": "Unknown order sent"}
+        cancel_response = {"code": -2011, "msg": "Unknown order sent."}
         req_mock.delete(regex_url, body=json.dumps(cancel_response))
 
         self.exchange.start_tracking_order(
@@ -1423,14 +1421,14 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         self.assertTrue(self._is_logged(
             "DEBUG",
             "The order OID1 does not exist on Binance Perpetuals. "
-            "No cancellation needed."
+            "No cancelation needed."
         ))
 
-        self.assertTrue("OID1" not in self.exchange._client_order_tracker._in_flight_orders)
+        self.assertTrue("OID1" in self.exchange._client_order_tracker._order_not_found_records)
 
     @aioresponses()
     def test_cancel_all_exception(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1467,8 +1465,65 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         self.assertTrue("OID1" in self.exchange._client_order_tracker._in_flight_orders)
 
     @aioresponses()
+    def test_cancel_order_successful(self, mock_api):
+        url = web_utils.rest_url(
+            CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
+        )
+        regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
+
+        cancel_response = {
+            "clientOrderId": "ODI1",
+            "cumQty": "0",
+            "cumQuote": "0",
+            "executedQty": "0",
+            "orderId": 283194212,
+            "origQty": "11",
+            "origType": "TRAILING_STOP_MARKET",
+            "price": "0",
+            "reduceOnly": False,
+            "side": "BUY",
+            "positionSide": "SHORT",
+            "status": "CANCELED",
+            "stopPrice": "9300",
+            "closePosition": False,
+            "symbol": "BTCUSDT",
+            "timeInForce": "GTC",
+            "type": "TRAILING_STOP_MARKET",
+            "activatePrice": "9020",
+            "priceRate": "0.3",
+            "updateTime": 1571110484038,
+            "workingType": "CONTRACT_PRICE",
+            "priceProtect": False
+        }
+        mock_api.delete(regex_url, body=json.dumps(cancel_response))
+
+        self.exchange.start_tracking_order(
+            order_id="OID1",
+            exchange_order_id="8886774",
+            trading_pair=self.trading_pair,
+            trading_type=TradeType.BUY,
+            price=Decimal("10000"),
+            amount=Decimal("1"),
+            order_type=OrderType.LIMIT,
+            leverage=1,
+            position=PositionAction.OPEN,
+        )
+        tracked_order = self.exchange._client_order_tracker.fetch_order("OID1")
+        tracked_order.current_state = OrderState.OPEN
+
+        self.assertTrue("OID1" in self.exchange._client_order_tracker._in_flight_orders)
+
+        canceled_order_id = self.async_run_with_timeout(self.exchange._execute_cancel(trading_pair=self.trading_pair,
+                                                                                      client_order_id="OID1"))
+
+        order_cancelled_events = self.order_cancelled_logger.event_log
+
+        self.assertEqual(1, len(order_cancelled_events))
+        self.assertEqual("OID1", canceled_order_id)
+
+    @aioresponses()
     def test_create_order_successful(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1495,7 +1550,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
 
     @aioresponses()
     def test_create_order_exception(self, req_mock):
-        url = utils.rest_url(
+        url = web_utils.rest_url(
             CONSTANTS.ORDER_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION
         )
         regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
@@ -1524,6 +1579,100 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
             f"1010."
         ))
 
+    def test_create_order_position_action_failure(self):
+        margin_asset = self.quote_asset
+        mocked_response = self._get_exchange_info_mock_response(margin_asset)
+        trading_rules = self.exchange._format_trading_rules(mocked_response)
+        self.exchange._trading_rules[self.trading_pair] = trading_rules[0]
+        self.async_run_with_timeout(self.exchange._create_order(trade_type=TradeType.BUY,
+                                                                order_id="OID1",
+                                                                trading_pair=self.trading_pair,
+                                                                amount=Decimal("10000"),
+                                                                order_type=OrderType.LIMIT,
+                                                                position_action="BAD POSITION ACTION",
+                                                                price=Decimal("1010")))
+
+        self.assertTrue("OID1" not in self.exchange._client_order_tracker._in_flight_orders)
+
+        self.assertTrue(self._is_logged(
+            "ERROR",
+            "Specify either OPEN_POSITION or CLOSE_POSITION position_action."
+        ))
+
+    def test_create_order_supported_order_type_failure(self):
+        margin_asset = self.quote_asset
+        mocked_response = self._get_exchange_info_mock_response(margin_asset)
+        trading_rules = self.exchange._format_trading_rules(mocked_response)
+        self.exchange._trading_rules[self.trading_pair] = trading_rules[0]
+        self.async_run_with_timeout(self.exchange._create_order(trade_type=TradeType.BUY,
+                                                                order_id="OID1",
+                                                                trading_pair=self.trading_pair,
+                                                                amount=Decimal("10000"),
+                                                                order_type="STOP LIMIT",
+                                                                position_action=PositionAction.OPEN,
+                                                                price=Decimal("1010")))
+
+        self.assertTrue("OID1" not in self.exchange._client_order_tracker._in_flight_orders)
+
+        self.assertTrue(self._is_logged(
+            "ERROR",
+            "STOP LIMIT is not in the list of supported order types"
+        ))
+
+    def test_create_order_min_order_size_failure(self):
+        margin_asset = self.quote_asset
+        min_order_size = 3
+        mocked_response = self._get_exchange_info_mock_response(margin_asset, min_order_size=min_order_size)
+        trading_rules = self.exchange._format_trading_rules(mocked_response)
+        self.exchange._trading_rules[self.trading_pair] = trading_rules[0]
+        trade_type = TradeType.BUY
+        amount = Decimal("2")
+
+        self.async_run_with_timeout(self.exchange._create_order(trade_type=trade_type,
+                                                                order_id="OID1",
+                                                                trading_pair=self.trading_pair,
+                                                                amount=amount,
+                                                                order_type=OrderType.LIMIT,
+                                                                position_action=PositionAction.OPEN,
+                                                                price=Decimal("1010")))
+
+        self.assertTrue("OID1" not in self.exchange._client_order_tracker._in_flight_orders)
+
+        self.assertTrue(self._is_logged(
+            "WARNING",
+            f"{trade_type.name.title()} order amount 0 is lower than the minimum order"
+            f" size {min_order_size}. The order will not be created."
+        ))
+
+    def test_create_order_min_notional_size_failure(self):
+        margin_asset = self.quote_asset
+        min_notional_size = 10
+        mocked_response = self._get_exchange_info_mock_response(margin_asset,
+                                                                min_notional_size=min_notional_size,
+                                                                min_base_amount_increment=0.5)
+        trading_rules = self.exchange._format_trading_rules(mocked_response)
+        self.exchange._trading_rules[self.trading_pair] = trading_rules[0]
+        trade_type = TradeType.BUY
+        amount = Decimal("2")
+        price = Decimal("4")
+
+        self.async_run_with_timeout(self.exchange._create_order(trade_type=trade_type,
+                                                                order_id="OID1",
+                                                                trading_pair=self.trading_pair,
+                                                                amount=amount,
+                                                                order_type=OrderType.LIMIT,
+                                                                position_action=PositionAction.OPEN,
+                                                                price=price))
+
+        self.assertTrue("OID1" not in self.exchange._client_order_tracker._in_flight_orders)
+
+        self.assertTrue(self._is_logged(
+            "WARNING",
+            "Buy order notional 8.0 is lower than the "
+            "minimum notional size 10. "
+            "The order will not be created."
+        ))
+
     def test_restore_tracking_states_only_registers_open_orders(self):
         orders = []
         orders.append(InFlightOrder(
@@ -1545,7 +1694,7 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
             amount=Decimal("1000.0"),
             price=Decimal("1.0"),
             creation_timestamp=1640001112.223,
-            initial_state=OrderState.CANCELLED
+            initial_state=OrderState.CANCELED
         ))
         orders.append(InFlightOrder(
             client_order_id="OID3",
@@ -1578,3 +1727,259 @@ class BinancePerpetualDerivativeUnitTest(unittest.TestCase):
         self.assertNotIn("OID2", self.exchange.in_flight_orders)
         self.assertNotIn("OID3", self.exchange.in_flight_orders)
         self.assertNotIn("OID4", self.exchange.in_flight_orders)
+
+    @patch("hummingbot.connector.utils.get_tracking_nonce")
+    def test_client_order_id_on_order(self, mocked_nonce):
+        mocked_nonce.return_value = 4
+
+        result = self.exchange.buy(
+            trading_pair=self.trading_pair,
+            amount=Decimal("1"),
+            order_type=OrderType.LIMIT,
+            price=Decimal("2"),
+            position_action="OPEN",
+        )
+        expected_client_order_id = get_new_client_order_id(
+            is_buy=True,
+            trading_pair=self.trading_pair,
+            hbot_order_id_prefix=CONSTANTS.BROKER_ID,
+            max_id_len=CONSTANTS.MAX_ORDER_ID_LEN,
+        )
+
+        self.assertEqual(result, expected_client_order_id)
+
+        result = self.exchange.sell(
+            trading_pair=self.trading_pair,
+            amount=Decimal("1"),
+            order_type=OrderType.LIMIT,
+            price=Decimal("2"),
+            position_action="OPEN",
+        )
+        expected_client_order_id = get_new_client_order_id(
+            is_buy=False,
+            trading_pair=self.trading_pair,
+            hbot_order_id_prefix=CONSTANTS.BROKER_ID,
+            max_id_len=CONSTANTS.MAX_ORDER_ID_LEN,
+        )
+
+        self.assertEqual(result, expected_client_order_id)
+
+    @aioresponses()
+    def test_update_balances(self, mock_api):
+        url = web_utils.rest_url(CONSTANTS.SERVER_TIME_PATH_URL)
+        regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
+
+        response = {"serverTime": 1640000003000}
+
+        mock_api.get(regex_url,
+                     body=json.dumps(response))
+
+        url = web_utils.rest_url(CONSTANTS.ACCOUNT_INFO_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2)
+        regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
+
+        response = {
+            "feeTier": 0,
+            "canTrade": True,
+            "canDeposit": True,
+            "canWithdraw": True,
+            "updateTime": 0,
+            "totalInitialMargin": "0.00000000",
+            "totalMaintMargin": "0.00000000",
+            "totalWalletBalance": "23.72469206",
+            "totalUnrealizedProfit": "0.00000000",
+            "totalMarginBalance": "23.72469206",
+            "totalPositionInitialMargin": "0.00000000",
+            "totalOpenOrderInitialMargin": "0.00000000",
+            "totalCrossWalletBalance": "23.72469206",
+            "totalCrossUnPnl": "0.00000000",
+            "availableBalance": "23.72469206",
+            "maxWithdrawAmount": "23.72469206",
+            "assets": [
+                {
+                    "asset": "USDT",
+                    "walletBalance": "23.72469206",
+                    "unrealizedProfit": "0.00000000",
+                    "marginBalance": "23.72469206",
+                    "maintMargin": "0.00000000",
+                    "initialMargin": "0.00000000",
+                    "positionInitialMargin": "0.00000000",
+                    "openOrderInitialMargin": "0.00000000",
+                    "crossWalletBalance": "23.72469206",
+                    "crossUnPnl": "0.00000000",
+                    "availableBalance": "23.72469206",
+                    "maxWithdrawAmount": "23.72469206",
+                    "marginAvailable": True,
+                    "updateTime": 1625474304765,
+                },
+                {
+                    "asset": "BUSD",
+                    "walletBalance": "103.12345678",
+                    "unrealizedProfit": "0.00000000",
+                    "marginBalance": "103.12345678",
+                    "maintMargin": "0.00000000",
+                    "initialMargin": "0.00000000",
+                    "positionInitialMargin": "0.00000000",
+                    "openOrderInitialMargin": "0.00000000",
+                    "crossWalletBalance": "103.12345678",
+                    "crossUnPnl": "0.00000000",
+                    "availableBalance": "100.12345678",
+                    "maxWithdrawAmount": "103.12345678",
+                    "marginAvailable": True,
+                    "updateTime": 1625474304765,
+                }
+            ],
+            "positions": [{
+                "symbol": "BTCUSDT",
+                "initialMargin": "0",
+                "maintMargin": "0",
+                "unrealizedProfit": "0.00000000",
+                "positionInitialMargin": "0",
+                "openOrderInitialMargin": "0",
+                "leverage": "100",
+                "isolated": True,
+                "entryPrice": "0.00000",
+                "maxNotional": "250000",
+                "bidNotional": "0",
+                "askNotional": "0",
+                "positionSide": "BOTH",
+                "positionAmt": "0",
+                "updateTime": 0,
+            }
+            ]
+        }
+
+        mock_api.get(regex_url, body=json.dumps(response))
+        self.async_run_with_timeout(self.exchange._update_balances())
+
+        available_balances = self.exchange.available_balances
+        total_balances = self.exchange.get_all_balances()
+
+        self.assertEqual(Decimal("23.72469206"), available_balances["USDT"])
+        self.assertEqual(Decimal("100.12345678"), available_balances["BUSD"])
+        self.assertEqual(Decimal("23.72469206"), total_balances["USDT"])
+        self.assertEqual(Decimal("103.12345678"), total_balances["BUSD"])
+
+    @aioresponses()
+    @patch("hummingbot.connector.time_synchronizer.TimeSynchronizer._current_seconds_counter")
+    def test_account_info_request_includes_timestamp(self, mock_api, mock_seconds_counter):
+        mock_seconds_counter.return_value = 1000
+
+        url = web_utils.rest_url(CONSTANTS.SERVER_TIME_PATH_URL)
+        regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
+
+        response = {"serverTime": 1640000003000}
+
+        mock_api.get(regex_url,
+                     body=json.dumps(response))
+
+        url = web_utils.rest_url(CONSTANTS.ACCOUNT_INFO_URL, domain=self.domain, api_version=CONSTANTS.API_VERSION_V2)
+        regex_url = re.compile(f"^{url}".replace(".", r"\.").replace("?", r"\?"))
+
+        response = {
+            "feeTier": 0,
+            "canTrade": True,
+            "canDeposit": True,
+            "canWithdraw": True,
+            "updateTime": 0,
+            "totalInitialMargin": "0.00000000",
+            "totalMaintMargin": "0.00000000",
+            "totalWalletBalance": "23.72469206",
+            "totalUnrealizedProfit": "0.00000000",
+            "totalMarginBalance": "23.72469206",
+            "totalPositionInitialMargin": "0.00000000",
+            "totalOpenOrderInitialMargin": "0.00000000",
+            "totalCrossWalletBalance": "23.72469206",
+            "totalCrossUnPnl": "0.00000000",
+            "availableBalance": "23.72469206",
+            "maxWithdrawAmount": "23.72469206",
+            "assets": [
+                {
+                    "asset": "USDT",
+                    "walletBalance": "23.72469206",
+                    "unrealizedProfit": "0.00000000",
+                    "marginBalance": "23.72469206",
+                    "maintMargin": "0.00000000",
+                    "initialMargin": "0.00000000",
+                    "positionInitialMargin": "0.00000000",
+                    "openOrderInitialMargin": "0.00000000",
+                    "crossWalletBalance": "23.72469206",
+                    "crossUnPnl": "0.00000000",
+                    "availableBalance": "23.72469206",
+                    "maxWithdrawAmount": "23.72469206",
+                    "marginAvailable": True,
+                    "updateTime": 1625474304765,
+                },
+                {
+                    "asset": "BUSD",
+                    "walletBalance": "103.12345678",
+                    "unrealizedProfit": "0.00000000",
+                    "marginBalance": "103.12345678",
+                    "maintMargin": "0.00000000",
+                    "initialMargin": "0.00000000",
+                    "positionInitialMargin": "0.00000000",
+                    "openOrderInitialMargin": "0.00000000",
+                    "crossWalletBalance": "103.12345678",
+                    "crossUnPnl": "0.00000000",
+                    "availableBalance": "100.12345678",
+                    "maxWithdrawAmount": "103.12345678",
+                    "marginAvailable": True,
+                    "updateTime": 1625474304765,
+                }
+            ],
+            "positions": [{
+                "symbol": "BTCUSDT",
+                "initialMargin": "0",
+                "maintMargin": "0",
+                "unrealizedProfit": "0.00000000",
+                "positionInitialMargin": "0",
+                "openOrderInitialMargin": "0",
+                "leverage": "100",
+                "isolated": True,
+                "entryPrice": "0.00000",
+                "maxNotional": "250000",
+                "bidNotional": "0",
+                "askNotional": "0",
+                "positionSide": "BOTH",
+                "positionAmt": "0",
+                "updateTime": 0,
+            }
+            ]
+        }
+
+        mock_api.get(regex_url, body=json.dumps(response))
+        self.async_run_with_timeout(self.exchange._update_balances())
+
+        account_request = next(((key, value) for key, value in mock_api.requests.items()
+                                if key[1].human_repr().startswith(url)))
+        request_params = account_request[1][0].kwargs["params"]
+        self.assertEqual(int(mock_seconds_counter.return_value * 1e3), request_params["timestamp"])
+
+    def test_limit_orders(self):
+        self.exchange.start_tracking_order(
+            order_id="OID1",
+            exchange_order_id="8886774",
+            trading_pair=self.trading_pair,
+            trading_type=TradeType.BUY,
+            price=Decimal("10000"),
+            amount=Decimal("1"),
+            order_type=OrderType.LIMIT,
+            leverage=1,
+            position=PositionAction.OPEN,
+        )
+        self.exchange.start_tracking_order(
+            order_id="OID2",
+            exchange_order_id="8886774",
+            trading_pair=self.trading_pair,
+            trading_type=TradeType.BUY,
+            price=Decimal("10000"),
+            amount=Decimal("1"),
+            order_type=OrderType.LIMIT,
+            leverage=1,
+            position=PositionAction.OPEN,
+        )
+
+        limit_orders = self.exchange.limit_orders
+
+        self.assertEqual(len(limit_orders), 2)
+        self.assertTrue(type(limit_orders) == list)
+        self.assertTrue(type(limit_orders[0]) == LimitOrder)

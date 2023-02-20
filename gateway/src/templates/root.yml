@@ -3,7 +3,7 @@ configurations:
   $namespace harmony:
     configurationPath: harmony.yml
     schemaPath: harmony-schema.json
-    
+
   $namespace solana:
     configurationPath: solana.yml
     schemaPath: solana-schema.json
@@ -12,10 +12,18 @@ configurations:
     configurationPath: avalanche.yml
     schemaPath: ethereum-schema.json
 
+  $namespace database:
+    configurationPath: database.yml
+    schemaPath: database-schema.json
+    
   $namespace ethereum:
     configurationPath: ethereum.yml
     schemaPath: ethereum-schema.json
 
+  $namespace polygon:
+    configurationPath: polygon.yml
+    schemaPath: ethereum-schema.json
+    
   $namespace ethereumGasStation:
     configurationPath: ethereum-gas-station.yml
     schemaPath: ethereum-gas-station-schema.json
@@ -28,10 +36,34 @@ configurations:
     configurationPath: ssl.yml
     schemaPath: ssl-schema.json
 
+  $namespace curve:
+    configurationPath: curve.yml
+    schemaPath: curve-schema.json
+    
+  $namespace defira:
+    configurationPath: defira.yml
+    schemaPath: defira-schema.json
+
   $namespace pangolin:
     configurationPath: pangolin.yml
     schemaPath: pangolin-schema.json
 
+  $namespace quickswap:
+    configurationPath: quickswap.yml
+    schemaPath: quickswap-schema.json
+    
+  $namespace perp:
+    configurationPath: perp.yml
+    schemaPath: perp-schema.json
+
+  $namespace sushiswap:
+    configurationPath: sushiswap.yml
+    schemaPath: sushiswap-schema.json
+
+  $namespace traderjoe:
+    configurationPath: traderjoe.yml
+    schemaPath: traderjoe-schema.json
+    
   $namespace server:
     configurationPath: server.yml
     schemaPath: server-schema.json
@@ -43,3 +75,15 @@ configurations:
   $namespace uniswap:
     configurationPath: uniswap.yml
     schemaPath: uniswap-schema.json
+
+  $namespace openocean:
+    configurationPath: openocean.yml
+    schemaPath: openocean-schema.json
+
+  $namespace defikingdoms:
+    configurationPath: defikingdoms.yml
+    schemaPath: defikingdoms-schema.json
+
+  $namespace serum:
+    configurationPath: serum.yml
+    schemaPath: serum-schema.json

@@ -23,13 +23,17 @@ RUN apt-get update && \
 # app directory
 WORKDIR /usr/src/app
 
+# create app writable directory for db files
+RUN mkdir /var/lib/gateway
+RUN chown -R hummingbot /var/lib/gateway
+
 # copy pwd file to container
 COPY . .
 
 # install dependencies
-RUN yarn
+RUN yarn install --frozen-lockfile
 
-EXPOSE 5000
+EXPOSE 15888
 
 RUN yarn build
 

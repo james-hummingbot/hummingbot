@@ -9,14 +9,13 @@ echo
 
 
 HOST_CONF_PATH="${1:=(pwd -P)/conf}"
-INFURA_API_KEY="${2:=null}"
 
 echo "HOST_CONF_PATH=$HOST_CONF_PATH"
-echo "INFURA_API_KEY=$INFURA_API_KEY"
+
+mkdir -p $HOST_CONF_PATH
 
 # generate ethereum file
 cp "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/../src/templates/ethereum.yml" "$HOST_CONF_PATH/ethereum.yml"
-sed -i'.bak' -e "/nodeAPIKey:/ s/[^ ][^ ]*$/$INFURA_API_KEY/" "$HOST_CONF_PATH/ethereum.yml"
 echo "created $HOST_CONF_PATH/ethereum.yml"
 
 # generate ssl file
@@ -47,6 +46,15 @@ echo "created $HOST_CONF_PATH/server.yml"
 
 cp "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/../src/templates/uniswap.yml" "$HOST_CONF_PATH/uniswap.yml"
 echo "created $HOST_CONF_PATH/uniswap.yml"
+
+cp "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/../src/templates/traderjoe.yml" "$HOST_CONF_PATH/traderjoe.yml"
+echo "created $HOST_CONF_PATH/traderjoe.yml"
+
+cp "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/../src/templates/solana.yml" "$HOST_CONF_PATH/solana.yml"
+echo "created $HOST_CONF_PATH/solana.yml"
+
+cp "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/../src/templates/serum.yml" "$HOST_CONF_PATH/serum.yml"
+echo "created $HOST_CONF_PATH/serum.yml"
 
 # generate the telemetry file
 echo "enabled: false" > "$HOST_CONF_PATH/telemetry.yml"  # enabled must be prompted

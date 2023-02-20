@@ -1,0 +1,9 @@
+{
+  "connector": "curve",
+  "chain": "ethereum",
+  "network": "mainnet",
+  "base": "WETH",
+  "quote": "USDT",
+  "amount": "1.1",
+  "side": "BUY"
+}

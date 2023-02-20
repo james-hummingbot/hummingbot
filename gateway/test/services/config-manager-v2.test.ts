@@ -1,6 +1,7 @@
 import fs from 'fs';
 import fsp from 'fs/promises';
 import fse from 'fs-extra';
+import os from 'os';
 import path from 'path';
 import {
   deepCopy,
@@ -19,7 +20,7 @@ describe('Configuration manager v2 tests', () => {
   beforeEach(async () => {
     // Create a temp dir in project
     tempDirPath = await fsp.mkdtemp(
-      path.join(__dirname, '../../config-manager-v2-unit-test')
+      path.join(os.tmpdir(), 'config-manager-v2-unit-test')
     );
     tempDirPath = fse.realpathSync(tempDirPath);
 
@@ -44,6 +45,7 @@ describe('Configuration manager v2 tests', () => {
   it('loading a valid configuration root', (done) => {
     expect(configManager.get('ssl.caCertificatePath')).toBeDefined();
     expect(configManager.get('ethereum.networks')).toBeDefined();
+    expect(configManager.get('defira.contractAddresses')).toBeDefined();
     done();
   });
 
@@ -64,13 +66,25 @@ describe('Configuration manager v2 tests', () => {
     expect(() => {
       new ConfigManagerV2(path.join(tempDirPath, 'test1/invalid-root-2.yml'));
     }).toThrow();
+    expect(() => {
+      new ConfigManagerV2(
+        path.join(tempDirPath, 'test1/invalid-root-defira.yml')
+      );
+    }).toThrow();
     done();
   });
 
   it('reading from config file', (done) => {
     expect(configManager.get('ssl.keyPath')).toEqual('gateway.key');
     expect(configManager.get('ethereum.networks.kovan.chainID')).toEqual(42);
-    expect(configManager.get('ethereum.nativeCurrencySymbol')).toEqual('ETH');
+    expect(
+      configManager.get('ethereum.networks.kovan.nativeCurrencySymbol')
+    ).toEqual('ETH');
+    expect(
+      configManager.get('defira.contractAddresses.testnet.initCodeHash')
+    ).toEqual(
+      '0x7224a10f5f94e12d3973f5ef0f63a558539a93e1eef47935934ffc4d741b4b9f' // noqa: mock
+    );
     done();
   });
 
@@ -100,6 +114,7 @@ describe('Configuration manager v2 tests', () => {
       tokenListType: 'URL',
       tokenListSource:
         'https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link',
+      nativeCurrencySymbol: 'ETH',
     });
     expect(configManager.get('ssl.keyPath')).toEqual(newKeyPath);
 

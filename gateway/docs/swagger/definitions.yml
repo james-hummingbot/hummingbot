@@ -338,6 +338,7 @@ definitions:
       - 'expectedAmount'
       - 'price'
       - 'gasPrice'
+      - 'gasPriceToken'
       - 'gasLimit'
       - 'gasCost'
     properties:
@@ -367,6 +368,9 @@ definitions:
       gasPrice:
         type: 'number'
         example: 96
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
       gasLimit:
         type: 'number'
         example: 150688
@@ -426,6 +430,7 @@ definitions:
       - 'amount'
       - 'price'
       - 'gasPrice'
+      - 'gasPriceToken'
       - 'gasLimit'
       - 'gasCost'
       - 'nonce'
@@ -456,6 +461,9 @@ definitions:
         type: 'string'
       gasPrice:
         type: 'string'
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
       gasLimit:
         type: 'string'
       gasCost:
@@ -782,22 +790,1604 @@ definitions:
       tokens:
         type: 'object'
         example: '
-        { tokens: [
-          {
-            "address": "0x006BeA43Baa3f7A6f765F14f10A1a1b08334EF45",
-            "chainId": "1",
-            "name": "Stox",
-            "symbol": "STX",
-            "decimals": "18",
-            "logoURI": "https://tokens.1inch.io/0x006bea43baa3f7a6f765f14f10a1a1b08334ef45.png"
-          },
-          {
-            "address": "0x0327112423F3A68efdF1fcF402F6c5CB9f7C33fd",
-            "chainId": "1",
-            "name": "PieDAOBTC",
-            "symbol": "BTC",
-            "decimals": "18",
-            "logoURI": "https://tokens.1inch.io/0x0327112423f3a68efdf1fcf402f6c5cb9f7c33fd.png"
-          }
-        ]
-          }'
+        {
+          tokens: [
+            {
+              "address": "0x006BeA43Baa3f7A6f765F14f10A1a1b08334EF45",
+              "chainId": "1",
+              "name": "Stox",
+              "symbol": "STX",
+              "decimals": "18",
+              "logoURI": "https://tokens.1inch.io/0x006bea43baa3f7a6f765f14f10a1a1b08334ef45.png"
+            },
+            {
+              "address": "0x0327112423F3A68efdF1fcF402F6c5CB9f7C33fd",
+              "chainId": "1",
+              "name": "PieDAOBTC",
+              "symbol": "BTC",
+              "decimals": "18",
+              "logoURI": "https://tokens.1inch.io/0x0327112423f3a68efdf1fcf402f6c5cb9f7c33fd.png"
+            }
+          ]
+        }'
+
+  NetworkSelectionRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'kovan'
+      connector:
+        type: 'string'
+        example: 'uniswap'
+
+  EstimateGasResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'gasPrice'
+      - 'gasPriceToken'
+      - 'gasLimit'
+      - 'gasCost'
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      gasPrice:
+        type: 'number'
+        example: 96
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
+      gasLimit:
+        type: 'number'
+        example: 150688
+      gasCost:
+        type: 'string'
+        example: '0.014466048000000000'
+
+  SerumOrderSideEnum:
+    type: string
+    enum:
+      - BUY
+      - SELL
+  SerumOrderTypeEnum:
+    type: string
+    enum:
+      - LIMIT
+      - IOC
+      - POST_ONLY
+  SerumOrderStatusEnum:
+    type: string
+    enum:
+      - OPEN
+      - CANCELED
+      - FILLED
+      - CREATION_PENDING
+      - CANCELATION_PENDING
+      - UNKNOWN
+  SerumRootRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+  SerumRootResponse:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'connection'
+      - 'timestamp'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      connection:
+        type: boolean
+        example: true
+      timestamp:
+        type: number
+        example: 1652304454740
+  SerumGetMarketsRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      name:
+        type: string
+        example: 'SOL/USDT'
+      names:
+        type: array
+        items:
+          type: string
+          example:
+            - 'SOL/USDT'
+            - 'SOL/USDC'
+  SerumGetMarketsResponseItem:
+    type: object
+    properties:
+      name:
+        type: string
+        example: SOL/USDT
+      address:
+        type: string
+        example: HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1
+      programId:
+        type: string
+        example: 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
+      deprecated:
+        type: boolean
+        example: false
+      minimumOrderSize:
+        type: number
+        example: 0.1
+      tickSize:
+        type: number
+        example: 0.001
+      minimumBaseIncrement:
+        type: string
+        example: 100000000
+  SerumGetMarketsResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumGetMarketsResponseItem'
+  SerumGetMarketsResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumGetMarketsResponseList'
+  SerumGetOrderBooksRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      marketName:
+        type: string
+        example: 'SOL/USDT'
+      marketNames:
+        type: array
+        items:
+          type: string
+          example:
+            - 'SOL/USDT'
+            - 'SOL/USDC'
+  SerumGetOrderBooksBidsResponseItem:
+    type: 'object'
+    required:
+      - 'id'
+      - 'exchangeId'
+      - 'marketName'
+      - 'price'
+      - 'amount'
+      - 'side'
+    properties:
+      id:
+        type: string
+        example: 123456789
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 250
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+      type:
+        $ref: '#/definitions/SerumOrderTypeEnum'
+  SerumGetOrderBooksBidsResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumGetOrderBooksBidsResponseItem'
+  SerumGetOrderBooksAsksResponseItem:
+    type: 'object'
+    required:
+      - 'id'
+      - 'exchangeId'
+      - 'marketName'
+      - 'price'
+      - 'amount'
+      - 'side'
+    properties:
+      id:
+        type: string
+        example: 123456789
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 250
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+      type:
+        $ref: '#/definitions/SerumOrderTypeEnum'
+  SerumGetOrderBooksAsksResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumGetOrderBooksAsksResponseItem'
+  SerumGetOrderBooksResponseItem:
+    type: object
+    properties:
+      market:
+        $ref: '#/definitions/SerumGetMarketsResponseItem'
+      bids:
+        $ref: '#/definitions/SerumGetOrderBooksBidsResponseList'
+      asks:
+        $ref: '#/definitions/SerumGetOrderBooksAsksResponseList'
+  SerumGetOrderBooksResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumGetOrderBooksResponseItem'
+  SerumGetTickersRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      marketName:
+        type: string
+        example: 'SOL/USDT'
+      marketNames:
+        type: array
+        items:
+          type: string
+          example:
+            - 'SOL/USDT'
+            - 'SOL/USDC'
+  SerumGetTickersResponseItem:
+    type: object
+    properties:
+      price:
+        type: number
+        example: 43.37523838
+      timestamp:
+        type: number
+        example: 1652363040000
+  SerumGetTickersResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumGetTickersResponseItem'
+  SerumPostCreateOrdersItemRequest:
+    type: object
+    required:
+      - 'marketName'
+      - 'ownerAddress'
+      - 'payerAddress'
+      - 'side'
+      - 'price'
+      - 'amount'
+    properties:
+      id:
+        type: string
+        example: 123456789
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      payerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+      price:
+        type: number
+        example: 9999.99
+      amount:
+        type: number
+        example: 0.1
+      type:
+        $ref: '#/definitions/SerumOrderTypeEnum'
+  SerumPostCreateOrdersListRequest:
+    type: array
+    items:
+      $ref: '#/definitions/SerumPostCreateOrdersItemRequest'
+  SerumPostCreateOrdersRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      order:
+        $ref: '#/definitions/SerumPostCreateOrdersItemRequest'
+      orders:
+        $ref: '#/definitions/SerumPostCreateOrdersListRequest'
+  SerumPostCreateOrdersResponseItem:
+    type: 'object'
+    required:
+      - 'id'
+      - 'exchangeId'
+      - 'marketName'
+      - 'ownerAddress'
+      - 'price'
+      - 'amount'
+      - 'side'
+      - 'status'
+      - 'type'
+    properties:
+      id:
+        type: string
+        example: 123456789
+      exchangeId:
+        type: string
+        example: 184467256269654779094895731
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 250
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+      type:
+        $ref: '#/definitions/SerumOrderTypeEnum'
+  SerumPostCreateOrdersResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumPostCreateOrdersResponseItem'
+  SerumGetOrdersRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      order:
+        type: object
+        required:
+          - 'ownerAddress'
+        properties:
+          id:
+            type: string
+            example: 123456789
+          exchangeId:
+            type: string
+            example: 184467256269654779094895731
+          marketName:
+            type: string
+            example: SOL/USDT
+          ownerAddress:
+            type: string
+            example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      orders:
+        type: array
+        items:
+          type: object
+          required:
+              - 'ownerAddress'
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+                example:
+                  - 123456789
+                  - 987654321
+            exchangeIds:
+              type: array
+              items:
+                type: string
+                example:
+                  - 184467256269654779094895731
+                  - 284467256269654779094895723
+            marketName:
+              type: string
+              example: SOL/USDT
+            ownerAddress:
+              type: string
+              example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+  SerumGetOrdersResponseItem:
+    type: object
+    properties:
+      id:
+        type: string
+        example: 123456789
+      exchangeId:
+        type: string
+        example: 184467256269654779094895731
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 9999.99
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+        example: BUY
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+        example: FILLED
+  SerumGetOrdersResponse:
+    additionalProperties:
+      additionalProperties:
+        $ref: '#/definitions/SerumGetOrdersResponseItem'
+  SerumDeleteCancelOrdersRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      order:
+        type: object
+        required:
+          - 'ownerAddress'
+        properties:
+          id:
+            type: string
+            example: 123456789
+          exchangeId:
+            type: string
+            example: 184467256269654779094895731
+          marketName:
+            type: string
+            example: SOL/USDT
+          ownerAddress:
+            type: string
+            example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      orders:
+        type: array
+        items:
+          type: object
+          required:
+            - 'ownerAddress'
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+                example:
+                  - 123456789
+                  - 987654321
+            exchangeIds:
+              type: array
+              items:
+                type: string
+                example:
+                  - 184467256269654779094895731
+                  - 284467256269654779094895723
+            marketName:
+              type: string
+              example: SOL/USDT
+            ownerAddress:
+              type: string
+              example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+  SerumDeleteCancelOrdersResponseItem:
+    type: object
+    properties:
+      id:
+        type: string
+        example: 123456789
+      exchangeId:
+        type: string
+        example: 184467256269654779094895731
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 9999.99
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+        example: SELL
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+        example: CANCELATION_PENDING
+  SerumDeleteCancelOrdersResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumDeleteCancelOrdersResponseItem'
+  SerumDeleteCancelOrdersResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumDeleteCancelOrdersResponseList'
+  SerumGetOpenOrdersRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      order:
+        type: object
+        required:
+          - 'ownerAddress'
+        properties:
+          id:
+            type: string
+            example: 123456789
+          exchangeId:
+            type: string
+            example: 184467256269654779094895731
+          marketName:
+            type: string
+            example: SOL/USDT
+          ownerAddress:
+            type: string
+            example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      orders:
+        type: array
+        items:
+          type: object
+          required:
+            - 'ownerAddress'
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+                example:
+                  - 123456789
+                  - 987654321
+            exchangeIds:
+              type: array
+              items:
+                type: string
+                example:
+                  - 184467256269654779094895731
+                  - 284467256269654779094895723
+            marketName:
+              type: string
+              example: SOL/USDT
+            ownerAddress:
+              type: string
+              example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+  SerumGetOpenOrdersResponseItem:
+    type: object
+    properties:
+      id:
+        type: string
+        example: 123456789
+      exchangeId:
+        type: string
+        example: 184467256269654779094895731
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 9999.99
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+        example: BUY
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+        example: OPEN
+  SerumGetOpenOrdersResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumGetOpenOrdersResponseItem'
+  SerumGetOpenOrdersResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumGetOpenOrdersResponseList'
+  SerumGetFilledOrdersRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      order:
+        type: object
+        required:
+          - 'ownerAddress'
+        properties:
+          id:
+            type: string
+            example: 123456789
+          exchangeId:
+            type: string
+            example: 184467256269654779094895731
+          marketName:
+            type: string
+            example: SOL/USDT
+          ownerAddress:
+            type: string
+            example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      orders:
+        type: array
+        items:
+          type: object
+          required:
+            - 'ownerAddress'
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+                example:
+                  - 123456789
+                  - 987654321
+            exchangeIds:
+              type: array
+              items:
+                type: string
+                example:
+                  - 184467256269654779094895731
+                  - 284467256269654779094895723
+            marketName:
+              type: string
+              example: SOL/USDT
+            ownerAddress:
+              type: string
+              example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+  SerumGetFilledOrdersResponseItem:
+    type: object
+    properties:
+      id:
+        type: string
+        example: 123456789
+      exchangeId:
+        type: string
+        example: 184467256269654779094895731
+      marketName:
+        type: string
+        example: SOL/USDT
+      ownerAddress:
+        type: string
+        example: 2wvayrdTmrJFUAdg0yHoBtPu1eE41t0fxruxTh7ufnJa
+      price:
+        type: number
+        example: 9999.99
+      amount:
+        type: number
+        example: 0.1
+      side:
+        $ref: '#/definitions/SerumOrderSideEnum'
+      status:
+        $ref: '#/definitions/SerumOrderStatusEnum'
+      fee:
+        type: number
+        example: 0.1
+      fillmentTimestamp:
+        type: number
+        example: 1652383641
+  SerumGetFilledOrdersResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumGetFilledOrdersResponseItem'
+  SerumGetFilledOrdersResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumGetFilledOrdersResponseList'
+  SerumPostSettleFundsRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'ownerAddress'
+    properties:
+      chain:
+        type: string
+        example: solana
+      network:
+        type: string
+        example: mainnet-beta
+      connector:
+        type: string
+        example: serum
+      marketName:
+        type: string
+        example: SOL/USDT
+      marketNames:
+        type: array
+        items:
+          type: string
+          example:
+            - SOL/USDT
+            - BTC/USDT
+  SerumPostSettleFundsResponseItem:
+    type: string
+    example: 4vAstoT7dgJ3LaexYRQbJ4HwbV8vPaMEUWVP3o89oq4vJcn9E11LJHyEpoc3sZ4dxmAtZGU7YyRS1uR36wuUEQMK
+  SerumPostSettleFundsResponseList:
+    type: array
+    items:
+      $ref: '#/definitions/SerumPostSettleFundsResponseItem'
+  SerumPostSettleFundsResponse:
+    additionalProperties:
+      $ref: '#/definitions/SerumPostSettleFundsResponseList'
+
+  LiquidityAddRequest:
+    type: 'object'
+    required:
+      - 'address'
+      - 'token0'
+      - 'token1'
+      - 'amount0'
+      - 'amount1'
+      - 'fee'
+      - 'lowerPrice'
+      - 'upperPrice'
+    properties:
+      address:
+        type: 'string'
+        example: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+      token0:
+        type: 'string'
+        example: 'DAI'
+      token1:
+        type: 'string'
+        example: 'WETH'
+      amount0:
+        type: 'string'
+        example: '10'
+      amount1:
+        type: 'string'
+        example: '10'
+      lowerPrice:
+        type: 'number'
+        example: 1
+      upperPrice:
+        type: number
+        example: 5
+      maxFeePerGas:
+        type: number
+      maxPriorityFeePerGas:
+        type: number
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'kovan'
+      connector:
+        type: 'string'
+        example: 'uniswapLP'
+
+  LiquidityAddResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'token0'
+      - 'token1'
+      - 'gasPrice'
+      - 'gasPriceToken'
+      - 'gasLimit'
+      - 'gasCost'
+      - 'nonce'
+    properties:
+      network:
+        type: 'string'
+        example: 'kovan'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      token0:
+        type: 'string'
+        example: 'DAI'
+      token1:
+        type: 'string'
+        example: 'WETH'
+      gasPrice:
+        type: 'string'
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
+      gasLimit:
+        type: 'string'
+      gasCost:
+        type: 'string'
+      nonce:
+        type: 'string'
+      txHash:
+        type: 'string'
+        example: '0x0000000000000000000000000000000000000000'
+
+  LiquidityRemoveRequest:
+    type: 'object'
+    required:
+      - 'address'
+      - 'tokenId'
+    properties:
+      address:
+        type: 'string'
+        example: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+      tokenId:
+        type: 'number'
+        example: 12
+      maxFeePerGas:
+        type: number
+      maxPriorityFeePerGas:
+        type: number
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'kovan'
+      connector:
+        type: 'string'
+        example: 'uniswapLP'
+
+  LiquidityRemoveResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'tokenId'
+      - 'gasPrice'
+      - 'gasPriceToken'
+      - 'gasLimit'
+      - 'gasCost'
+      - 'nonce'
+    properties:
+      network:
+        type: 'string'
+        example: 'kovan'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      tokenId:
+        type: 'number'
+        example: 12
+      gasPrice:
+        type: 'string'
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
+      gasLimit:
+        type: 'string'
+      gasCost:
+        type: 'string'
+      nonce:
+        type: 'string'
+      txHash:
+        type: 'string'
+        example: '0x0000000000000000000000000000000000000000'
+
+  LiquidityCollectRequest:
+    type: 'object'
+    required:
+      - 'address'
+      - 'tokenId'
+    properties:
+      address:
+        type: 'string'
+        example: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+      tokenId:
+        type: 'number'
+        example: 12
+      maxFeePerGas:
+        type: number
+      maxPriorityFeePerGas:
+        type: number
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'kovan'
+      connector:
+        type: 'string'
+        example: 'uniswapLP'
+
+  LiquidityCollectResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'tokenId'
+      - 'gasPrice'
+      - 'gasPriceToken'
+      - 'gasLimit'
+      - 'gasCost'
+      - 'nonce'
+    properties:
+      network:
+        type: 'string'
+        example: 'kovan'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      tokenId:
+        type: 'number'
+        example: 12
+      gasPrice:
+        type: 'string'
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
+      gasLimit:
+        type: 'string'
+      gasCost:
+        type: 'string'
+      nonce:
+        type: 'string'
+      txHash:
+        type: 'string'
+        example: '0x0000000000000000000000000000000000000000'
+
+  LiquidityPositionRequest:
+    type: 'object'
+    required:
+      - 'tokenId'
+    properties:
+      tokenId:
+        type: 'number'
+        example: 12
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'kovan'
+      connector:
+        type: 'string'
+        example: 'uniswapLP'
+
+  LiquidityPositionResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'tokenId'
+      - 'token0'
+      - 'token1'
+      - 'fee'
+      - 'lowerPrice'
+      - 'upperPrice'
+      - 'amount0'
+      - 'amount1'
+      - 'unclaimedToken0'
+      - 'unclaimedToken1'
+    properties:
+      network:
+        type: 'string'
+        example: 'kovan'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      tokenId:
+        type: 'number'
+        example: 12
+      token0:
+        type: 'string'
+        example: 'DAI'
+      token1:
+        type: 'string'
+        example: 'WETH'
+      fee:
+        type: 'string'
+        example: 'LOW'
+      lowerPrice:
+        type: 'string'
+        example: '1'
+      upperPrice:
+        type: 'string'
+        example: '5'
+      amount0:
+        type: 'string'
+        example: '1'
+      amount1:
+        type: 'string'
+        example: '1'
+      unclaimedToken0:
+        type: 'string'
+        example: '2'
+      unclaimedToken1:
+        type: 'string'
+        example: '2'
+
+  LiquidityPriceRequest:
+    type: 'object'
+    required:
+      - 'token0'
+      - 'token1'
+      - 'fee'
+      - 'period'
+      - 'interval'
+    properties:
+      token0:
+        type: 'string'
+        example: 'DAI'
+      token1:
+        type: 'string'
+        example: 'WETH'
+      fee:
+        type: 'string'
+        example: 'LOW'
+      period:
+        type: 'number'
+        example: 60
+      interval:
+        type: 'number'
+        example: 5
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'kovan'
+      connector:
+        type: 'string'
+        example: 'uniswapLP'
+
+  LiquidityPriceResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'token0'
+      - 'token1'
+      - 'fee'
+      - 'period'
+      - 'interval'
+    properties:
+      network:
+        type: 'string'
+        example: 'kovan'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      token0:
+        type: 'string'
+        example: 'DAI'
+      token1:
+        type: 'string'
+        example: 'WETH'
+      fee:
+        type: 'string'
+        example: 'LOW'
+      period:
+        type: 'number'
+        example: 60
+      interval:
+        type: 'number'
+        example: 5
+      prices:
+        type: 'object'
+        example: ['1', '2', '3']
+
+
+  PerpPairsRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+    properties:
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'optimism'
+      connector:
+        type: 'string'
+        example: 'perp'
+
+  PerpPairsResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'pairs'
+    properties:
+      network:
+        type: 'string'
+        example: 'optimism'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 1
+      pairs:
+        type: 'array'
+        items: 'string'
+        example: ['AAVEUSD', 'PERPUSD', 'BTCUSD']
+
+  PerpPriceRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'base'
+      - 'quote'
+    properties:
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'optimism'
+      connector:
+        type: 'string'
+        example: 'perp'
+      base:
+        type: 'string'
+        example: 'AAVE'
+      quote:
+        type: 'string'
+        example: 'USD'
+
+  PerpPriceResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'base'
+      - 'quote'
+      - 'markPrice'
+      - 'indexPrice'
+      - 'indexTwapPrice'
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 1
+      base:
+        type: 'string'
+        example: 'AAVE'
+      quote:
+        type: 'string'
+        example: 'USD'
+      markPrice:
+        type: 'string'
+        example: '0.1'
+      indexPrice:
+        type: 'string'
+        example: '0.2'
+      indexTwapPrice:
+        type: 'string'
+        example: '0.3'
+
+  PerpStatusResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'base'
+      - 'quote'
+      - 'isActive'
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 1
+      base:
+        type: 'string'
+        example: 'AAVE'
+      quote:
+        type: 'string'
+        example: 'USD'
+      isActive:
+        type: 'boolean'
+        example: 'true'
+
+  PerpPositionRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'base'
+      - 'quote'
+      - 'address'
+    properties:
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'optimism'
+      connector:
+        type: 'string'
+        example: 'perp'
+      base:
+        type: 'string'
+        example: 'AAVE'
+      quote:
+        type: 'string'
+        example: 'USD'
+      address:
+        type: 'string'
+        example: '0x...'
+
+  PerpPositionResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'base'
+      - 'quote'
+      - 'positionAmt'
+      - 'positionSide'
+      - 'unrealizedProfit'
+      - 'leverage'
+      - 'entryPrice'
+      - 'tickerSymbol'
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 1
+      base:
+        type: 'string'
+        example: 'AAVE'
+      quote:
+        type: 'string'
+        example: 'USD'
+      positionAmt:
+        type: 'string'
+        example: '0.1'
+      positionSide:
+        type: 'string'
+        example: 'LONG'
+      unrealizedProfit:
+        type: 'string'
+        example: '0.3'
+      leverage:
+        type: 'string'
+        example: '1'
+      entryPrice:
+        type: 'string'
+        example: '100.3'
+      tickerSymbol:
+        type: 'string'
+        example: 'AAVEUSD'
+
+  PerpBalanceRequest:
+    type: 'object'
+    required:
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'address'
+    properties:
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'optimism'
+      connector:
+        type: 'string'
+        example: 'perp'
+      address:
+        type: 'string'
+        example: '0x...'
+
+  PerpBalanceResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'balance'
+
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 1
+      balance:
+        type: 'string'
+        example: '100'
+
+  PerpOpenRequest:
+    type: 'object'
+    required:
+      - 'quote'
+      - 'base'
+      - 'amount'
+      - 'side'
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'address'
+    properties:
+      quote:
+        type: 'string'
+        example: 'AAVE'
+      base:
+        type: 'string'
+        example: 'USD'
+      amount:
+        type: 'string'
+        example: '10'
+      side:
+        type: 'string'
+        example: 'LONG'
+      nonce:
+        type: number
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'optimism'
+      connector:
+        type: 'string'
+        example: 'perp'
+      address:
+        type: 'string'
+        example: '0x...'
+
+  PerpOpenResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'base'
+      - 'quote'
+      - 'amount'
+      - 'gasPrice'
+      - 'gasPriceToken'
+      - 'gasLimit'
+      - 'gasCost'
+      - 'nonce'
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 0.5
+      base:
+        type: 'string'
+        example: 'AAVE'
+      quote:
+        type: 'string'
+        example: 'USD'
+      amount:
+        type: 'string'
+        example: '10'
+      gasPrice:
+        type: 'string'
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
+      gasLimit:
+        type: 'string'
+      gasCost:
+        type: 'string'
+      nonce:
+        type: 'string'
+      txHash:
+        type: 'string'
+  
+  PerpCloseRequest:
+    type: 'object'
+    required:
+      - 'quote'
+      - 'base'
+      - 'chain'
+      - 'network'
+      - 'connector'
+      - 'address'
+    properties:
+      quote:
+        type: 'string'
+        example: 'AAVE'
+      base:
+        type: 'string'
+        example: 'USD'
+      nonce:
+        type: number
+      chain:
+        type: 'string'
+        example: 'ethereum'
+      network:
+        type: 'string'
+        example: 'optimism'
+      connector:
+        type: 'string'
+        example: 'perp'
+      address:
+        type: 'string'
+        example: '0x...'
+
+  PerpCloseResponse:
+    type: 'object'
+    required:
+      - 'network'
+      - 'timestamp'
+      - 'latency'
+      - 'base'
+      - 'gasPrice'
+      - 'gasPriceToken'
+      - 'gasLimit'
+      - 'gasCost'
+      - 'nonce'
+    properties:
+      network:
+        type: 'string'
+        example: 'mainnet'
+      timestamp:
+        type: 'integer'
+        example: 1636368085740
+      latency:
+        type: 'number'
+        example: 0.5
+      base:
+        type: 'string'
+        example: 'AAVE'
+      gasPrice:
+        type: 'string'
+      gasPriceToken:
+        type: 'string'
+        example: 'ETH'
+      gasLimit:
+        type: 'string'
+      gasCost:
+        type: 'string'
+      nonce:
+        type: 'string'
+      txHash:
+        type: 'string'
+

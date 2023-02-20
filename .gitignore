@@ -86,10 +86,12 @@ coverage.xml
 # configuration files
 /gateway/conf/*
 /gateway_conf
+/conf/encrypted_default.json
 # except the examples, template and migration files in /gateway/conf/
 !/gateway/conf/*-example.yml
 # these are database files create by the level library
 /**/*.level
+/gateway/db/*
 
 # node installs
 /gateway/node_modules/
@@ -110,3 +112,5 @@ coverage.xml
 
 # Debug console
 .debug_console_ssh_host_key
+
+/conf_backup

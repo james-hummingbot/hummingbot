@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "strict": true,
-    "types": ["jest", "node"],
+    "types": ["@types/jest", "jest", "node"],
     "target": "es6",
     "module": "commonjs",
     "allowJs": true,
@@ -23,8 +23,14 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "typeRoots": ["node_modules/@types", "src/@types"]
+    "typeRoots": ["node_modules/@types", "src/@types"],
+    "downlevelIteration": true
   },
   "exclude": ["node_modules"],
-  "include": ["src/**/*.ts", "src/**/*.js", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "test/**/*.ts",
+    "integration-test/**/*.ts"
+  ]
 }
